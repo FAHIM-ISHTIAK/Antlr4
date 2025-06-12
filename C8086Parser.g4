@@ -14,7 +14,7 @@ options {
     extern std::ofstream parserLogFile;
     extern std::ofstream errorFile;
 
-    extern int syntaxErrorCount;
+    extern int syntaxErrorCount ;
 }
 
 @parser::members {
