@@ -1,5 +1,0 @@
-Variable Declaration: type_specifier declaration_list 20 at line 3
-type_specifier name_line: type: INT at line3
-Variable Declaration: type_specifier declaration_list 20 at line 5
-type_specifier name_line: type: INT at line5
-Parsing completed successfully with 1 syntax errors.

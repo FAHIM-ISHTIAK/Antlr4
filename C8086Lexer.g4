@@ -74,7 +74,7 @@ STRING
 // 3) Whitespace & Newlines (skipped)
 // ------------------------------
 
-WS      : [ \t\f\r\n]+ -> skip ;
+WS      : [ \t\f\r\n]+ -> channel(HIDDEN);
 
 // ------------------------------
 // 4) Keywords & Symbols
