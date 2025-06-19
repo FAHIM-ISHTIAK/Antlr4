@@ -110,7 +110,7 @@ public:
         return nullptr;
     }
 
-    bool Insert(string name, string type)
+    bool Insert(string name, string type, SymbolAdditionalInfo additionalInfo)
     {
         SymbolInfo *tmp = LookUp2(name.c_str(), type);
         int index = getBucketIndex(name);
@@ -121,6 +121,7 @@ public:
             if (curr == nullptr)
             {
                 hashTable[index] = new SymbolInfo(name, type, nullptr);
+                hashTable[index]->additionalInfo = additionalInfo; // Set additional info
             }
             else
             {
@@ -131,6 +132,7 @@ public:
                     position++;
                 }
                 curr->next = new SymbolInfo(name, type, nullptr);
+                curr->next->additionalInfo = additionalInfo; // Set additional info
                 collisions++;
             }
             //cout<<"Inserted in ScopeTable# "<<this->id<<" at position "<<index+1<<", "<<position+1<<endl<<endl;

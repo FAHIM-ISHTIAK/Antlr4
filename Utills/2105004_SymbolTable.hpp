@@ -53,8 +53,8 @@ class SymbolTable{
         delete tmp;
     }
 
-    bool Insert(string name,string type){
-        return current->Insert(name,type);
+    bool Insert(string name,string type, SymbolAdditionalInfo additionalInfo){
+        return current->Insert(name,type, additionalInfo);
     }
 
     bool Remove(string name){
@@ -71,8 +71,13 @@ class SymbolTable{
             }
             tmp = tmp->parent_scope;
         }
-        cout<<"'"<<name<<"'"<<" not found in any of the ScopeTables"<<endl<<endl;
+        //cout<<"'"<<name<<"'"<<" not found in any of the ScopeTables"<<endl<<endl;
         return nullptr;
+    }
+
+    SymbolInfo* LookUp2(string name){
+        SymbolInfo *obj = current->LookUp(name);
+        return obj;
     }
 
     void PrintCurrentScopeTable(){
