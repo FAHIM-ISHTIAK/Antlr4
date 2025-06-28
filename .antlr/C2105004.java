@@ -1,4 +1,4 @@
-// Generated from /home/fahim_ishtiak/CSE 310/antlr/antlr4-resources/antlr4-skeletons/cpp/C8086Parser.g4 by ANTLR 4.13.1
+// Generated from /home/fahim_ishtiak/CSE 310/antlr/antlr4-resources/antlr4-skeletons/cpp/C2105004.g4 by ANTLR 4.13.1
 
     #include <iostream>
     #include <fstream>
@@ -22,7 +22,7 @@ import java.util.Iterator;
 import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast", "CheckReturnValue"})
-public class C8086Parser extends Parser {
+public class C2105004 extends Parser {
 	static { RuntimeMetaData.checkVersion("4.13.1", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
@@ -107,7 +107,7 @@ public class C8086Parser extends Parser {
 	}
 
 	@Override
-	public String getGrammarFileName() { return "C8086Parser.g4"; }
+	public String getGrammarFileName() { return "C2105004.g4"; }
 
 	@Override
 	public String[] getRuleNames() { return ruleNames; }
@@ -150,7 +150,7 @@ public class C8086Parser extends Parser {
 	        errorFile.flush();
 	    }
 
-	public C8086Parser(TokenStream input) {
+	public C2105004(TokenStream input) {
 		super(input);
 		_interp = new ParserATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
 	}
@@ -360,13 +360,13 @@ public class C8086Parser extends Parser {
 		public Type_specifierContext type_specifier() {
 			return getRuleContext(Type_specifierContext.class,0);
 		}
-		public TerminalNode ID() { return getToken(C8086Parser.ID, 0); }
-		public TerminalNode LPAREN() { return getToken(C8086Parser.LPAREN, 0); }
+		public TerminalNode ID() { return getToken(C2105004.ID, 0); }
+		public TerminalNode LPAREN() { return getToken(C2105004.LPAREN, 0); }
 		public Parameter_listContext parameter_list() {
 			return getRuleContext(Parameter_listContext.class,0);
 		}
-		public TerminalNode RPAREN() { return getToken(C8086Parser.RPAREN, 0); }
-		public TerminalNode SEMICOLON() { return getToken(C8086Parser.SEMICOLON, 0); }
+		public TerminalNode RPAREN() { return getToken(C2105004.RPAREN, 0); }
+		public TerminalNode SEMICOLON() { return getToken(C2105004.SEMICOLON, 0); }
 		public Func_declarationContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -471,12 +471,12 @@ public class C8086Parser extends Parser {
 		public Type_specifierContext type_specifier() {
 			return getRuleContext(Type_specifierContext.class,0);
 		}
-		public TerminalNode ID() { return getToken(C8086Parser.ID, 0); }
-		public TerminalNode LPAREN() { return getToken(C8086Parser.LPAREN, 0); }
+		public TerminalNode ID() { return getToken(C2105004.ID, 0); }
+		public TerminalNode LPAREN() { return getToken(C2105004.LPAREN, 0); }
 		public Parameter_listContext parameter_list() {
 			return getRuleContext(Parameter_listContext.class,0);
 		}
-		public TerminalNode RPAREN() { return getToken(C8086Parser.RPAREN, 0); }
+		public TerminalNode RPAREN() { return getToken(C2105004.RPAREN, 0); }
 		public Compound_statementContext compound_statement() {
 			return getRuleContext(Compound_statementContext.class,0);
 		}
@@ -514,11 +514,6 @@ public class C8086Parser extends Parser {
 				                syntaxErrorCount++;
 				            }
 				        }
-						else{
-							SymbolAdditionalInfo info = SymbolAdditionalInfo();
-							info.deleted = true;
-							symbolTable->Insert((((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null), "ID",  info);
-						}
 
 				setState(97);
 				((Func_definitionContext)_localctx).lp = match(LPAREN);
@@ -557,10 +552,6 @@ public class C8086Parser extends Parser {
 
 							writeIntoparserLogFile("Line " + std::to_string((((Func_definitionContext)_localctx).cm_stmt!=null?(((Func_definitionContext)_localctx).cm_stmt.stop):null)->getLine()) + ":" + " func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement\n");
 							writeIntoparserLogFile((((Func_definitionContext)_localctx).t!=null?_input.getText(((Func_definitionContext)_localctx).t.start,((Func_definitionContext)_localctx).t.stop):null) + " " + (((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null) + (((Func_definitionContext)_localctx).lp!=null?((Func_definitionContext)_localctx).lp.getText():null) + (((Func_definitionContext)_localctx).pl!=null?_input.getText(((Func_definitionContext)_localctx).pl.start,((Func_definitionContext)_localctx).pl.stop):null) + (((Func_definitionContext)_localctx).rp!=null?((Func_definitionContext)_localctx).rp.getText():null) + (((Func_definitionContext)_localctx).cm_stmt!=null?_input.getText(((Func_definitionContext)_localctx).cm_stmt.start,((Func_definitionContext)_localctx).cm_stmt.stop):null) + "\n");
-						existing = symbolTable->LookUp((((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null));
-						if(existing && existing->additionalInfo.deleted){
-							symbolTable->Remove((((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null));
-						}
 						existing = symbolTable->LookUp((((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null));
 						if (!existing) {
 				            SymbolAdditionalInfo info = SymbolAdditionalInfo();
@@ -606,11 +597,6 @@ public class C8086Parser extends Parser {
 				                syntaxErrorCount++;
 				            }
 				        }
-						else{
-							SymbolAdditionalInfo info = SymbolAdditionalInfo();
-							info.deleted = true;
-							symbolTable->Insert((((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null), "ID",  info);
-						}
 						
 				setState(108);
 				((Func_definitionContext)_localctx).lp = match(LPAREN);
@@ -622,10 +608,6 @@ public class C8086Parser extends Parser {
 
 							writeIntoparserLogFile("Line " + std::to_string((((Func_definitionContext)_localctx).cm_stmt!=null?(((Func_definitionContext)_localctx).cm_stmt.stop):null)->getLine()) + ":" + " func_definition : type_specifier ID LPAREN RPAREN compound_statement\n");
 							writeIntoparserLogFile((((Func_definitionContext)_localctx).t!=null?_input.getText(((Func_definitionContext)_localctx).t.start,((Func_definitionContext)_localctx).t.stop):null) + " " + (((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null) + (((Func_definitionContext)_localctx).lp!=null?((Func_definitionContext)_localctx).lp.getText():null) + (((Func_definitionContext)_localctx).rp!=null?((Func_definitionContext)_localctx).rp.getText():null) + (((Func_definitionContext)_localctx).cm_stmt!=null?_input.getText(((Func_definitionContext)_localctx).cm_stmt.start,((Func_definitionContext)_localctx).cm_stmt.stop):null) + "\n");
-						existing = symbolTable->LookUp((((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null));
-						if(existing && existing->additionalInfo.deleted){
-							symbolTable->Remove((((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null));
-						}
 						existing = symbolTable->LookUp((((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null));
 						if (!existing) {
 							SymbolAdditionalInfo info = SymbolAdditionalInfo();
@@ -677,16 +659,16 @@ public class C8086Parser extends Parser {
 		public Type_specifierContext type_specifier() {
 			return getRuleContext(Type_specifierContext.class,0);
 		}
-		public TerminalNode ID() { return getToken(C8086Parser.ID, 0); }
-		public TerminalNode ADDOP() { return getToken(C8086Parser.ADDOP, 0); }
-		public TerminalNode MULOP() { return getToken(C8086Parser.MULOP, 0); }
-		public TerminalNode ASSIGNOP() { return getToken(C8086Parser.ASSIGNOP, 0); }
-		public TerminalNode LOGICOP() { return getToken(C8086Parser.LOGICOP, 0); }
-		public TerminalNode RELOP() { return getToken(C8086Parser.RELOP, 0); }
+		public TerminalNode ID() { return getToken(C2105004.ID, 0); }
+		public TerminalNode ADDOP() { return getToken(C2105004.ADDOP, 0); }
+		public TerminalNode MULOP() { return getToken(C2105004.MULOP, 0); }
+		public TerminalNode ASSIGNOP() { return getToken(C2105004.ASSIGNOP, 0); }
+		public TerminalNode LOGICOP() { return getToken(C2105004.LOGICOP, 0); }
+		public TerminalNode RELOP() { return getToken(C2105004.RELOP, 0); }
 		public Parameter_listContext parameter_list() {
 			return getRuleContext(Parameter_listContext.class,0);
 		}
-		public TerminalNode COMMA() { return getToken(C8086Parser.COMMA, 0); }
+		public TerminalNode COMMA() { return getToken(C2105004.COMMA, 0); }
 		public Parameter_listContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -878,8 +860,8 @@ public class C8086Parser extends Parser {
 		public Token LCURL;
 		public StatementsContext stmts;
 		public Token RCURL;
-		public TerminalNode LCURL() { return getToken(C8086Parser.LCURL, 0); }
-		public TerminalNode RCURL() { return getToken(C8086Parser.RCURL, 0); }
+		public TerminalNode LCURL() { return getToken(C2105004.LCURL, 0); }
+		public TerminalNode RCURL() { return getToken(C2105004.RCURL, 0); }
 		public StatementsContext statements() {
 			return getRuleContext(StatementsContext.class,0);
 		}
@@ -965,7 +947,7 @@ public class C8086Parser extends Parser {
 		public Declaration_listContext declaration_list() {
 			return getRuleContext(Declaration_listContext.class,0);
 		}
-		public TerminalNode SEMICOLON() { return getToken(C8086Parser.SEMICOLON, 0); }
+		public TerminalNode SEMICOLON() { return getToken(C2105004.SEMICOLON, 0); }
 		public Declaration_list_errContext declaration_list_err() {
 			return getRuleContext(Declaration_list_errContext.class,0);
 		}
@@ -1088,9 +1070,9 @@ public class C8086Parser extends Parser {
 		public Token INT;
 		public Token FLOAT;
 		public Token VOID;
-		public TerminalNode INT() { return getToken(C8086Parser.INT, 0); }
-		public TerminalNode FLOAT() { return getToken(C8086Parser.FLOAT, 0); }
-		public TerminalNode VOID() { return getToken(C8086Parser.VOID, 0); }
+		public TerminalNode INT() { return getToken(C2105004.INT, 0); }
+		public TerminalNode FLOAT() { return getToken(C2105004.FLOAT, 0); }
+		public TerminalNode VOID() { return getToken(C2105004.VOID, 0); }
 		public Type_specifierContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -1165,19 +1147,19 @@ public class C8086Parser extends Parser {
 		public Token CONST_INT;
 		public Token RTHIRD;
 		public Token COMMA;
-		public TerminalNode ID() { return getToken(C8086Parser.ID, 0); }
-		public TerminalNode LTHIRD() { return getToken(C8086Parser.LTHIRD, 0); }
-		public TerminalNode CONST_INT() { return getToken(C8086Parser.CONST_INT, 0); }
-		public TerminalNode RTHIRD() { return getToken(C8086Parser.RTHIRD, 0); }
-		public TerminalNode COMMA() { return getToken(C8086Parser.COMMA, 0); }
+		public TerminalNode ID() { return getToken(C2105004.ID, 0); }
+		public TerminalNode LTHIRD() { return getToken(C2105004.LTHIRD, 0); }
+		public TerminalNode CONST_INT() { return getToken(C2105004.CONST_INT, 0); }
+		public TerminalNode RTHIRD() { return getToken(C2105004.RTHIRD, 0); }
+		public TerminalNode COMMA() { return getToken(C2105004.COMMA, 0); }
 		public Declaration_listContext declaration_list() {
 			return getRuleContext(Declaration_listContext.class,0);
 		}
-		public TerminalNode ASSIGNOP() { return getToken(C8086Parser.ASSIGNOP, 0); }
-		public TerminalNode MULOP() { return getToken(C8086Parser.MULOP, 0); }
-		public TerminalNode LOGICOP() { return getToken(C8086Parser.LOGICOP, 0); }
-		public TerminalNode RELOP() { return getToken(C8086Parser.RELOP, 0); }
-		public TerminalNode ADDOP() { return getToken(C8086Parser.ADDOP, 0); }
+		public TerminalNode ASSIGNOP() { return getToken(C2105004.ASSIGNOP, 0); }
+		public TerminalNode MULOP() { return getToken(C2105004.MULOP, 0); }
+		public TerminalNode LOGICOP() { return getToken(C2105004.LOGICOP, 0); }
+		public TerminalNode RELOP() { return getToken(C2105004.RELOP, 0); }
+		public TerminalNode ADDOP() { return getToken(C2105004.ADDOP, 0); }
 		public Declaration_listContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -1497,25 +1479,25 @@ public class C8086Parser extends Parser {
 		public Compound_statementContext compound_statement() {
 			return getRuleContext(Compound_statementContext.class,0);
 		}
-		public TerminalNode FOR() { return getToken(C8086Parser.FOR, 0); }
-		public TerminalNode LPAREN() { return getToken(C8086Parser.LPAREN, 0); }
+		public TerminalNode FOR() { return getToken(C2105004.FOR, 0); }
+		public TerminalNode LPAREN() { return getToken(C2105004.LPAREN, 0); }
 		public ExpressionContext expression() {
 			return getRuleContext(ExpressionContext.class,0);
 		}
-		public TerminalNode RPAREN() { return getToken(C8086Parser.RPAREN, 0); }
+		public TerminalNode RPAREN() { return getToken(C2105004.RPAREN, 0); }
 		public List<StatementContext> statement() {
 			return getRuleContexts(StatementContext.class);
 		}
 		public StatementContext statement(int i) {
 			return getRuleContext(StatementContext.class,i);
 		}
-		public TerminalNode IF() { return getToken(C8086Parser.IF, 0); }
-		public TerminalNode ELSE() { return getToken(C8086Parser.ELSE, 0); }
-		public TerminalNode WHILE() { return getToken(C8086Parser.WHILE, 0); }
-		public TerminalNode PRINTLN() { return getToken(C8086Parser.PRINTLN, 0); }
-		public TerminalNode ID() { return getToken(C8086Parser.ID, 0); }
-		public TerminalNode SEMICOLON() { return getToken(C8086Parser.SEMICOLON, 0); }
-		public TerminalNode RETURN() { return getToken(C8086Parser.RETURN, 0); }
+		public TerminalNode IF() { return getToken(C2105004.IF, 0); }
+		public TerminalNode ELSE() { return getToken(C2105004.ELSE, 0); }
+		public TerminalNode WHILE() { return getToken(C2105004.WHILE, 0); }
+		public TerminalNode PRINTLN() { return getToken(C2105004.PRINTLN, 0); }
+		public TerminalNode ID() { return getToken(C2105004.ID, 0); }
+		public TerminalNode SEMICOLON() { return getToken(C2105004.SEMICOLON, 0); }
+		public TerminalNode RETURN() { return getToken(C2105004.RETURN, 0); }
 		public StatementContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -1714,7 +1696,7 @@ public class C8086Parser extends Parser {
 	public static class Expression_statementContext extends ParserRuleContext {
 		public Token SEMICOLON;
 		public ExpressionContext expr;
-		public TerminalNode SEMICOLON() { return getToken(C8086Parser.SEMICOLON, 0); }
+		public TerminalNode SEMICOLON() { return getToken(C2105004.SEMICOLON, 0); }
 		public ExpressionContext expression() {
 			return getRuleContext(ExpressionContext.class,0);
 		}
@@ -1782,9 +1764,9 @@ public class C8086Parser extends Parser {
 		public Token LTHIRD;
 		public ExpressionContext expr;
 		public Token RTHIRD;
-		public TerminalNode ID() { return getToken(C8086Parser.ID, 0); }
-		public TerminalNode LTHIRD() { return getToken(C8086Parser.LTHIRD, 0); }
-		public TerminalNode RTHIRD() { return getToken(C8086Parser.RTHIRD, 0); }
+		public TerminalNode ID() { return getToken(C2105004.ID, 0); }
+		public TerminalNode LTHIRD() { return getToken(C2105004.LTHIRD, 0); }
+		public TerminalNode RTHIRD() { return getToken(C2105004.RTHIRD, 0); }
 		public ExpressionContext expression() {
 			return getRuleContext(ExpressionContext.class,0);
 		}
@@ -1886,7 +1868,7 @@ public class C8086Parser extends Parser {
 		public Logic_expressionContext logic_expression() {
 			return getRuleContext(Logic_expressionContext.class,0);
 		}
-		public TerminalNode ASSIGNOP() { return getToken(C8086Parser.ASSIGNOP, 0); }
+		public TerminalNode ASSIGNOP() { return getToken(C2105004.ASSIGNOP, 0); }
 		public VariableContext variable() {
 			return getRuleContext(VariableContext.class,0);
 		}
@@ -1967,7 +1949,7 @@ public class C8086Parser extends Parser {
 		public Rel_expressionContext rel_expression(int i) {
 			return getRuleContext(Rel_expressionContext.class,i);
 		}
-		public TerminalNode LOGICOP() { return getToken(C8086Parser.LOGICOP, 0); }
+		public TerminalNode LOGICOP() { return getToken(C2105004.LOGICOP, 0); }
 		public Logic_expressionContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -2035,7 +2017,7 @@ public class C8086Parser extends Parser {
 		public Simple_expressionContext simple_expression(int i) {
 			return getRuleContext(Simple_expressionContext.class,i);
 		}
-		public TerminalNode RELOP() { return getToken(C8086Parser.RELOP, 0); }
+		public TerminalNode RELOP() { return getToken(C2105004.RELOP, 0); }
 		public Rel_expressionContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -2099,11 +2081,11 @@ public class C8086Parser extends Parser {
 		public TermContext term() {
 			return getRuleContext(TermContext.class,0);
 		}
-		public TerminalNode ADDOP() { return getToken(C8086Parser.ADDOP, 0); }
+		public TerminalNode ADDOP() { return getToken(C2105004.ADDOP, 0); }
 		public Simple_expressionContext simple_expression() {
 			return getRuleContext(Simple_expressionContext.class,0);
 		}
-		public TerminalNode ASSIGNOP() { return getToken(C8086Parser.ASSIGNOP, 0); }
+		public TerminalNode ASSIGNOP() { return getToken(C2105004.ASSIGNOP, 0); }
 		public Simple_expressionContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -2224,8 +2206,8 @@ public class C8086Parser extends Parser {
 		public Unary_expressionContext unary_expression() {
 			return getRuleContext(Unary_expressionContext.class,0);
 		}
-		public TerminalNode HASH() { return getToken(C8086Parser.HASH, 0); }
-		public TerminalNode MULOP() { return getToken(C8086Parser.MULOP, 0); }
+		public TerminalNode HASH() { return getToken(C2105004.HASH, 0); }
+		public TerminalNode MULOP() { return getToken(C2105004.MULOP, 0); }
 		public TermContext term() {
 			return getRuleContext(TermContext.class,0);
 		}
@@ -2359,11 +2341,11 @@ public class C8086Parser extends Parser {
 		public Unary_expressionContext unexpr;
 		public Token NOT;
 		public FactorContext fctr;
-		public TerminalNode ADDOP() { return getToken(C8086Parser.ADDOP, 0); }
+		public TerminalNode ADDOP() { return getToken(C2105004.ADDOP, 0); }
 		public Unary_expressionContext unary_expression() {
 			return getRuleContext(Unary_expressionContext.class,0);
 		}
-		public TerminalNode NOT() { return getToken(C8086Parser.NOT, 0); }
+		public TerminalNode NOT() { return getToken(C2105004.NOT, 0); }
 		public FactorContext factor() {
 			return getRuleContext(FactorContext.class,0);
 		}
@@ -2454,19 +2436,19 @@ public class C8086Parser extends Parser {
 		public VariableContext variable() {
 			return getRuleContext(VariableContext.class,0);
 		}
-		public TerminalNode ID() { return getToken(C8086Parser.ID, 0); }
-		public TerminalNode LPAREN() { return getToken(C8086Parser.LPAREN, 0); }
+		public TerminalNode ID() { return getToken(C2105004.ID, 0); }
+		public TerminalNode LPAREN() { return getToken(C2105004.LPAREN, 0); }
 		public Argument_listContext argument_list() {
 			return getRuleContext(Argument_listContext.class,0);
 		}
-		public TerminalNode RPAREN() { return getToken(C8086Parser.RPAREN, 0); }
+		public TerminalNode RPAREN() { return getToken(C2105004.RPAREN, 0); }
 		public ExpressionContext expression() {
 			return getRuleContext(ExpressionContext.class,0);
 		}
-		public TerminalNode CONST_INT() { return getToken(C8086Parser.CONST_INT, 0); }
-		public TerminalNode CONST_FLOAT() { return getToken(C8086Parser.CONST_FLOAT, 0); }
-		public TerminalNode INCOP() { return getToken(C8086Parser.INCOP, 0); }
-		public TerminalNode DECOP() { return getToken(C8086Parser.DECOP, 0); }
+		public TerminalNode CONST_INT() { return getToken(C2105004.CONST_INT, 0); }
+		public TerminalNode CONST_FLOAT() { return getToken(C2105004.CONST_FLOAT, 0); }
+		public TerminalNode INCOP() { return getToken(C2105004.INCOP, 0); }
+		public TerminalNode DECOP() { return getToken(C2105004.DECOP, 0); }
 		public FactorContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -2689,7 +2671,7 @@ public class C8086Parser extends Parser {
 		public ArgumentsContext arguments() {
 			return getRuleContext(ArgumentsContext.class,0);
 		}
-		public TerminalNode COMMA() { return getToken(C8086Parser.COMMA, 0); }
+		public TerminalNode COMMA() { return getToken(C2105004.COMMA, 0); }
 		public ArgumentsContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}

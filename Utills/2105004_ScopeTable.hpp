@@ -2,6 +2,7 @@
 #ifndef SCOPE_TABLE_HPP
 #define SCOPE_TABLE_HPP
 #include <string>
+#include<ostream>
 
 #include "2105004_SymbolInfo.hpp"
 #include "2105004_hash.hpp"
@@ -17,11 +18,12 @@ class ScopeTable
     int collisions;
     string scope_id;
     int child_count;
+    ostream& out;
 
 public:
     ScopeTable *parent_scope;
 
-    ScopeTable(int bucketSize, HashFunction hash_func, ScopeTable *parent_scope = nullptr)
+    ScopeTable(int bucketSize, HashFunction hash_func, ostream& out = cout, ScopeTable *parent_scope = nullptr) : out(out)
     {
         if (bucketSize <= 0)
         {
@@ -46,6 +48,7 @@ public:
         {
             hashTable[i] = nullptr;
         }
+        // out<<"Hello\n"<<endl;
     }
 
     ~ScopeTable()
@@ -81,7 +84,7 @@ public:
             {
                 if (print)
                 {
-                    cout << "'" << name << "'" << " found in ScopeTable# " << this->id << " at position " << index + 1 << ", " << position << endl;
+                    //cout << "'" << name << "'" << " found in ScopeTable# " << this->id << " at position " << index + 1 << ", " << position << endl;
                 }
                 return curr;
             }
@@ -101,7 +104,7 @@ public:
             {
                 if (print)
                 {
-                    cout<<"< "<<name<<" : "<<type<<" >"<<" already exists in ScopeTable# "<<this->getScopeId()<<" at position "<<index<<", "<<position - 1<<endl<<endl;
+                    //cout<<"< "<<name<<" : "<<type<<" >"<<" already exists in ScopeTable# "<<this->getScopeId()<<" at position "<<index<<", "<<position - 1<<endl<<endl;
                 }
                 return curr;
             }
@@ -187,22 +190,27 @@ public:
         {
             tabs += "\t";
         }
-        cout << "ScopeTable # " << this->scope_id << endl;
+        //cout << "ScopeTable # " << this->scope_id << endl;
+        out << "ScopeTable # " << this->scope_id << endl;
         for (int i = 0; i < bucketSize; i++)
         {
             if (hashTable[i] == nullptr)
             {
                 continue;
             }
-            cout << i << " --> ";
+            //cout << i << " --> ";
+            out << i << " --> ";
             SymbolInfo *curr = hashTable[i];
             while (curr != nullptr)
             {
-                cout << "< " << curr->getName() << " : " << curr->getType() << " >";
+                //cout << "< " << curr->getName() << " : " << curr->getType() << " >";
+                out << "< " << curr->getName() << " : " << curr->getType() << " >";
                 curr = curr->next;
             }
-            cout << endl;
+            //cout << endl;
+            out<<endl;
         }
+        out<<endl<<endl<<endl;
     }
 
     void setId(int id)

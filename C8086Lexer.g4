@@ -136,3 +136,4 @@ CONST_FLOAT
         );
     }
     ;
+HASH     : . {} ;

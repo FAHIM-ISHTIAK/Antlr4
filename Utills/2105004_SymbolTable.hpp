@@ -2,7 +2,7 @@
 #ifndef SYMBOL_TABLE_HPP
 #define SYMBOL_TABLE_HPP
 #include<string>
-
+#include<ostream>
 #include "2105004_ScopeTable.hpp"
 
 using namespace std;
@@ -14,12 +14,13 @@ class SymbolTable{
     int scopeCount;
     HashFunction hash_func; // Store the hash function
     double collision_ratio;
+    ostream& out;
 
     public:
-    SymbolTable(int totalBuckets, HashFunction hash_func = sdbm_hash){
+    SymbolTable(int totalBuckets, ostream& out = cout, HashFunction hash_func = sdbm_hash) : out(out) {
         this->totalBuckets = totalBuckets;
         this->hash_func = hash_func; // Store the hash function
-        this->scopeTableList = new ScopeTable(totalBuckets, hash_func, nullptr);
+        this->scopeTableList = new ScopeTable(totalBuckets, hash_func, out, nullptr);
         this->current = scopeTableList;
         this->collision_ratio= 0.0;
         current->setId(1);
@@ -38,7 +39,7 @@ class SymbolTable{
     }
 
     void Enter_scope(){
-        ScopeTable *scopeTable = new ScopeTable(totalBuckets,hash_func,current);
+        ScopeTable *scopeTable = new ScopeTable(totalBuckets,hash_func,out,current);
         scopeCount++;
         scopeTable->setId(scopeCount);
         current = scopeTable;
@@ -50,11 +51,20 @@ class SymbolTable{
         current = current->parent_scope;
         //cout<<"ScopeTable# "<<tmp->getId()<<" removed"<<endl<<endl;
         collision_ratio += (double)tmp->getCollisions() / totalBuckets;
+        //PrintAllScopeTable();
         delete tmp;
     }
 
     bool Insert(string name,string type, SymbolAdditionalInfo additionalInfo){
         return current->Insert(name,type, additionalInfo);
+    }
+
+    bool InsertInParent(string name, string type, SymbolAdditionalInfo additionalInfo){
+        if(current->parent_scope == nullptr){
+            //cout<<"Cannot insert in parent scope as there is no parent scope"<<endl<<endl;
+            return false;
+        }
+        return current->parent_scope->Insert(name,type, additionalInfo);
     }
 
     bool Remove(string name){
@@ -92,7 +102,8 @@ class SymbolTable{
             tmp = tmp->parent_scope;
             tabcnt++;
         }
-        cout<<endl;
+        //cout<<endl;
+        out<<endl<<endl<<endl<<endl;
     }
 
     double getMeanCollisionRatio(){

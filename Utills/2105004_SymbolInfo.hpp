@@ -19,6 +19,7 @@ class SymbolAdditionalInfo{
     string dataType = ""; // Data type of the symbol if it is a variable
     bool isArray = false;   // Flag to indicate if the symbol is an array
     int arraySize = 0; // Size of the array if it is an array 
+    bool deleted = false;
 
     SymbolAdditionalInfo(){
         // Default constructor

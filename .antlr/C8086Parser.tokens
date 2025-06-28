@@ -31,6 +31,7 @@ ASSIGNOP=30
 ID=31
 CONST_INT=32
 CONST_FLOAT=33
+HASH=34
 'if'=5
 'else'=6
 'for'=7
