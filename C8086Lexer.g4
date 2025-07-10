@@ -89,6 +89,15 @@ RETURN   : 'return' { writeIntoLexLogFile("Line# " + std::to_string(getLine()) +
 INT      : 'int' { writeIntoLexLogFile("Line# " + std::to_string(getLine()) + ": Token <INT> Lexeme " + getText()); };
 FLOAT    : 'float' { writeIntoLexLogFile("Line# " + std::to_string(getLine()) + ": Token <FLOAT> Lexeme " + getText()); };
 VOID     : 'void' { writeIntoLexLogFile("Line# " + std::to_string(getLine()) + ": Token <VOID> Lexeme " + getText()); };
+SWITCH   : 'switch' { writeIntoLexLogFile("Line# " + std::to_string(getLine()) + ": Token <SWITCH> Lexeme " + getText()); };
+CASE     : 'case' { writeIntoLexLogFile("Line# " + std::to_string(getLine()) + ": Token <CASE> Lexeme " + getText()); };
+DEFAULT : 'default' { writeIntoLexLogFile("Line# " + std::to_string(getLine()) + ": Token <DEFAULT> Lexeme " + getText()); };
+BREAK    : 'break' { writeIntoLexLogFile("Line# " + std::to_string(getLine()) + ": Token <BREAK> Lexeme " + getText()); };
+CONTINUE : 'continue' { writeIntoLexLogFile("Line# " + std::to_string(getLine()) + ": Token <CONTINUE> Lexeme " + getText()); };
+FORIN    : 'forin' {};
+FOREACH  : 'foreach' {};
+IN       : 'in' {};
+TO       : 'to' {};
 
 LPAREN   : '(' { writeIntoLexLogFile("Line# " + std::to_string(getLine()) + ": Token <LPAREN> Lexeme " + getText()); };
 RPAREN   : ')' { writeIntoLexLogFile("Line# " + std::to_string(getLine()) + ": Token <RPAREN> Lexeme " + getText()); };
@@ -98,6 +107,7 @@ LTHIRD   : '[' { writeIntoLexLogFile("Line# " + std::to_string(getLine()) + ": T
 RTHIRD   : ']' { writeIntoLexLogFile("Line# " + std::to_string(getLine()) + ": Token <RTHIRD> Lexeme " + getText()); };
 SEMICOLON: ';' { writeIntoLexLogFile("Line# " + std::to_string(getLine()) + ": Token <SEMICOLON> Lexeme " + getText()); };
 COMMA    : ',' { writeIntoLexLogFile("Line# " + std::to_string(getLine()) + ": Token <COMMA> Lexeme " + getText()); };
+COLON   : ':' { writeIntoLexLogFile("Line# " + std::to_string(getLine()) + ": Token <COLON> Lexeme " + getText()); };
 
 
 ADDOP    : [+\-] { writeIntoLexLogFile("Line# " + std::to_string(getLine()) + ": Token <ADDOP> Lexeme " + getText()); };

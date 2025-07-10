@@ -139,6 +139,9 @@ func_definition : t=type_specifier id=ID {
 		else{
 			SymbolAdditionalInfo info = SymbolAdditionalInfo();
 			info.deleted = true;
+			info.isFunction = true;
+			info.isDefined = true;
+			info.returnType = $t.text;
 			symbolTable->Insert($id.text, "ID",  info);
 		}
 } lp=LPAREN { symbolTable->Enter_scope(); } pl=parameter_list { 
@@ -165,44 +168,41 @@ if($pl.params.size() == $pl.names.size()){
 		symbolTable->Insert($pl.names[i], "ID", info);
 	}
 }
- } rp=RPAREN cm_stmt=compound_statement[true] {
-			writeIntoparserLogFile("Line " + std::to_string($cm_stmt.stop->getLine()) + ":" + " func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement\n");
-			writeIntoparserLogFile($t.text + " " + $id.text + $lp.text + $pl.text + $rp.text + $cm_stmt.text + "\n");
+ } rp=RPAREN {
 		existing = symbolTable->LookUp($id.text);
-		if(existing && existing->additionalInfo.deleted){
-			symbolTable->Remove($id.text);
-		}
-		existing = symbolTable->LookUp($id.text);
-		if (!existing) {
-            SymbolAdditionalInfo info = SymbolAdditionalInfo();
-            info.isFunction = true;
-            info.isDefined = true;
-            info.returnType = $t.text;
-            info.parameters = $pl.params;
-            hasInserted = symbolTable->Insert($id.text, "ID", info);
-			cout<<$id.text << " inserted in symbol table\n";
-        } else {
-			if(existing->additionalInfo.isFunction && !existing->additionalInfo.isDefined) {
-            existing->additionalInfo.isDefined = true;
-			if(existing->additionalInfo.returnType != $t.text) {
-				writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + " Return type mismatch with function declaration in function " + $id.text + "\n");
-				writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + " Return type mismatch with function declaration in function " + $id.text + "\n");
-				syntaxErrorCount++;
-        }
-			if(existing->additionalInfo.parameters != $pl.params) {
-				syntaxErrorCount++;
-				if(existing->additionalInfo.parameters.size() != $pl.params.size()){
-					writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + " Total number of arguments mismatch with declaration in function " + $id.text + "\n");
-					writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + " Total number of arguments mismatch with declaration in function " + $id.text + "\n");
+		if(existing && existing->additionalInfo.isFunction){
+			if(!existing->additionalInfo.isDefined){
+				if(existing->additionalInfo.parameters != $pl.params) {
+					syntaxErrorCount++;
+					if(existing->additionalInfo.parameters.size() != $pl.params.size()){
+						writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + " Total number of arguments mismatch with declaration in function " + $id.text + "\n");
+						writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + " Total number of arguments mismatch with declaration in function " + $id.text + "\n");
+					}
+					}
+				if(existing->additionalInfo.returnType != $t.text) {
+					writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + " Return type mismatch with function declaration in function " + $id.text + "\n");
+					writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + " Return type mismatch with function declaration in function " + $id.text + "\n");
+					syntaxErrorCount++;
 				}
-				}
+				existing->additionalInfo.isDefined = true;
+			}
+			else{
+				existing->additionalInfo.parameters = $pl.params;
 			}
 		}
+ } cm_stmt=compound_statement[true] {
+			writeIntoparserLogFile("Line " + std::to_string($cm_stmt.stop->getLine()) + ":" + " func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement\n");
+			writeIntoparserLogFile($t.text + " " + $id.text + $lp.text + $pl.text + $rp.text + $cm_stmt.text + "\n");
 }
 		| t=type_specifier id=ID {
 	existing = symbolTable->LookUp($id.text);
 	if (existing) {
-            if (existing->additionalInfo.isDefined) {
+			if(!existing->additionalInfo.isFunction){
+				writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + " Multiple declaration of " + $id.text + "\n");
+				writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + " Multiple declaration of " + $id.text + "\n");
+				syntaxErrorCount++;
+			}
+			else if(existing->additionalInfo.isDefined) {
 				writeIntoparserLogFile("Line# " + std::to_string($id->getLine()) + " - Error: Function '" + $id.text + "' is already defined.");
                 writeIntoErrorFile("Line# " + std::to_string($id->getLine()) + " - Error: Function '" + $id.text + "' is already defined.");
                 syntaxErrorCount++;
@@ -211,38 +211,31 @@ if($pl.params.size() == $pl.names.size()){
 		else{
 			SymbolAdditionalInfo info = SymbolAdditionalInfo();
 			info.deleted = true;
-			symbolTable->Insert($id.text, "ID",  info);
-		}
-		} lp=LPAREN { symbolTable->Enter_scope(); } rp=RPAREN cm_stmt=compound_statement[true] {
-			writeIntoparserLogFile("Line " + std::to_string($cm_stmt.stop->getLine()) + ":" + " func_definition : type_specifier ID LPAREN RPAREN compound_statement\n");
-			writeIntoparserLogFile($t.text + " " + $id.text + $lp.text + $rp.text + $cm_stmt.text + "\n");
-		existing = symbolTable->LookUp($id.text);
-		if(existing && existing->additionalInfo.deleted){
-			symbolTable->Remove($id.text);
-		}
-		existing = symbolTable->LookUp($id.text);
-		if (!existing) {
-			SymbolAdditionalInfo info = SymbolAdditionalInfo();
 			info.isFunction = true;
 			info.isDefined = true;
 			info.returnType = $t.text;
-			hasInserted = symbolTable->Insert($id.text, "ID", info);
+			symbolTable->Insert($id.text, "ID",  info);
 		}
-		else{
-			if(!existing->additionalInfo.isDefined) {
-			existing->additionalInfo.isDefined = true;
-			if(existing->additionalInfo.returnType != $t.text) {
-				writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + " Return type mismatch with function declaration in function " + $id.text + "\n");
-				writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + " Return type mismatch with function declaration in function " + $id.text + "\n");
-				syntaxErrorCount++;
-		}
-		if(existing->additionalInfo.parameters.size() > 0){
+} lp=LPAREN { symbolTable->Enter_scope(); } rp=RPAREN {
+		existing = symbolTable->LookUp($id.text);
+		if(existing && existing->additionalInfo.isFunction){
+			if(!existing->additionalInfo.isDefined){
+				if(existing->additionalInfo.returnType != $t.text) {
+					writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + " Return type mismatch with function declaration in function " + $id.text + "\n");
+					writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + " Return type mismatch with function declaration in function " + $id.text + "\n");
+					syntaxErrorCount++;
+				}
+				if(existing->additionalInfo.parameters.size() > 0){
 				writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + " Total number of arguments mismatch with declaration in function " + $id.text + "\n");				
 				writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + " Total number of arguments mismatch with declaration in function " + $id.text + "\n");
 				syntaxErrorCount++;
+		        }
+				existing->additionalInfo.isDefined = true;
+			}
 		}
-		}
-		}
+} cm_stmt=compound_statement[true] {
+			writeIntoparserLogFile("Line " + std::to_string($cm_stmt.stop->getLine()) + ":" + " func_definition : type_specifier ID LPAREN RPAREN compound_statement\n");
+			writeIntoparserLogFile($t.text + " " + $id.text + $lp.text + $rp.text + $cm_stmt.text + "\n");
 	}
  		;				
 

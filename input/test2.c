@@ -1,22 +1,16 @@
-int x,y,z; float a;
-
-void foo();
-
-int var(int a, int b){
+int var ( int a , int b){
   return a+b;
-}
-
-void foo(){
-  x=2;
-  y=x-5;
-}
-
-int main(){
-  int a[2],c,i,j ; float d;
-  a[0];
-  a[1]=5;
-  i= a[0]+a[1];
-  j= 2*3+(5%3 < 4 && 8) || 2 ;
-  d=var(1,2*3)+3.5*2;
+  }
+  int main () {
+  float d;
+  int a [4] , x;
+  float i;
+  d= var (1 ,2*3) +3.5*2;
+  forin (i in 0 to 10) {
+  i = i + 1;
+  }
+  foreach (x in i) {
+  x = x + 1;
+  }
   return 0;
 }
