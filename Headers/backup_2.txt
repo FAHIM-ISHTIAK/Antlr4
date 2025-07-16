@@ -14,40 +14,17 @@ options {
 
     extern std::ofstream parserLogFile;
     extern std::ofstream errorFile;
-	extern std::ofstream assemblyFile;
+
     extern int syntaxErrorCount;
 }
 
 @parser::members {
 
-   	SymbolTable *symbolTable = new SymbolTable(7,parserLogFile);
+	SymbolTable *symbolTable = new SymbolTable(7,parserLogFile);
 	bool hasInserted = false;
-	SymbolInfo *existing, *existing2;
-	string code = "";
-	string str = "";
-	string str2 = "";
-	string str3 = "";
-	string forlabel = "";
-	string forlabel2 = "";
-	string forlabel3 = "";
-	string forlabel4 = "";
-	string whilelabel = "";
-	string whilelabel2 = "";
-	string whilelabel3 = "";
-	string datacode = "";
-	int labelCount = 0;
-	int tempVarCount = 0;
-	int stackOffset = 0;
-	bool isGlobal = false;
-	stack<string> labelStack;
-	bool iscodewritten = false;
-	bool hasreturn = false;
+	SymbolInfo *existing;
 
-	std::string newLabel() {
-		return "L" + std::to_string(labelCount++);
-	}
-    
-    void writeIntoparserLogFile(const std::string message) {
+	void writeIntoparserLogFile(const std::string message) {
         if (!parserLogFile) {
             std::cout << "Error opening parserLogFile.txt" << std::endl;
             return;
@@ -57,6 +34,13 @@ options {
         parserLogFile.flush();
     }
 
+	// void notifyErrorListeners(antlr4::Token *offendingToken, const std::string &msg, std::exception_ptr e) override {
+    //     syntaxErrorCount++;
+    //     size_t line = offendingToken->getLine();
+    //     std::string errorMsg = "Line " + std::to_string(line) + ": Syntax error\n";
+    //     writeIntoErrorFile(errorMsg);
+    // }
+
     void writeIntoErrorFile(const std::string message) {
         if (!errorFile) {
             std::cout << "Error opening errorFile.txt" << std::endl;
@@ -65,79 +49,17 @@ options {
         errorFile << message << std::endl;
         errorFile.flush();
     }
-
-
-	void writeIntoAssemblyFile(const std::string message) {
-		if (!assemblyFile) {
-			std::cout << "Error opening assemblyOutput.asm" << std::endl;
-			return;
-		}
-
-		assemblyFile << message << std::endl;
-		assemblyFile.flush();
-	}
 }
 
 
-start : {
-		str = ".model small\n.stack 1000h\n.data\n";
-		writeIntoAssemblyFile(str);
-}pg=program
+start : pg=program
 	{
+        //writeIntoparserLogFile("Parsing completed successfully with " + std::to_string(syntaxErrorCount) + " syntax errors.");
+		writeIntoparserLogFile("Line " + std::to_string($pg.stop->getLine()) + ":" + " start : program\n");
 		symbolTable->PrintAllScopeTable();
 		delete symbolTable;
-		str = "new_line proc\n"
-		"    push ax\n"
-		"    push dx\n"
-		"    mov ah,2\n"
-		"    mov dl,0Dh\n"
-		"    int 21h\n"
-		"    mov ah,2\n"
-		"    mov dl,0Ah\n"
-		"    int 21h\n"
-		"    pop dx\n"
-		"    pop ax\n"
-		"    ret\n"
-		"    new_line endp\n"
-		"print_output proc  ;print what is in ax\n"
-		"    push ax\n"
-		"    push bx\n"
-		"    push cx\n"
-		"    push dx\n"
-		"    push si\n"
-		"    lea si,number\n"
-		"    mov bx,10\n"
-		"    add si,4\n"
-		"    cmp ax,0\n"
-		"    jnge negate\n"
-		"print:\n"
-		"    xor dx,dx\n"
-		"    div bx\n"
-		"    mov [si],dl\n"
-		"    add [si],'0'\n"
-		"    dec si\n"
-		"    cmp ax,0\n"
-		"    jne print\n"
-		"    inc si\n"
-		"    lea dx,si\n"
-		"    mov ah,9\n"
-		"    int 21h\n"
-		"    pop si\n"
-		"    pop dx\n"
-		"    pop cx\n"
-		"    pop bx\n"
-		"    pop ax\n"
-		"    ret\n"
-		"negate:\n"
-		"    push ax\n"
-		"    mov ah,2\n"
-		"    mov dl,'-'\n"
-		"    int 21h\n"
-		"    pop ax\n"
-		"    neg ax\n"
-		"    jmp print\n"
-		"print_output endp\n";
-		writeIntoAssemblyFile(str);
+		writeIntoparserLogFile("Total number of lines:" + std::to_string($pg.stop->getLine()) + "\n");
+		writeIntoparserLogFile("Total number of errors: " + std::to_string(syntaxErrorCount) + "\n");
 	}
 	;
 
@@ -155,27 +77,11 @@ unit : var_dec=var_declaration {
 	writeIntoparserLogFile("Line " + std::to_string($var_dec.start->getLine()) + ":" + " unit : var_declaration\n"); 
 	writeIntoparserLogFile($var_dec.text + "\n\n"); 
 }
-     | {
-		if(!iscodewritten){
-			str = ".code\n";
-			str += "MOV AX, @DATA\n";
-			str += "MOV DS, AX\n";
-			str += "\nCALL main\n";
-			writeIntoAssemblyFile(str);
-			iscodewritten = true;
-		}
-	 }func_dec=func_declaration {
+     | func_dec=func_declaration {
 		writeIntoparserLogFile("Line " + std::to_string($func_dec.stop->getLine()) + ":" + " unit : func_declaration\n");
 		writeIntoparserLogFile($func_dec.text + "\n\n");
 	 }
-     | {
-		if(!iscodewritten){
-			str = ".code\n";
-			str += "\nCALL main\n";
-			writeIntoAssemblyFile(str);
-			iscodewritten = true;
-		}
-	 } func_def=func_definition {
+     | func_def=func_definition {
 		writeIntoparserLogFile("Line " + std::to_string($func_def.stop->getLine()) + ":" + " unit : func_definition\n");
 		writeIntoparserLogFile($func_def.text + "\n");
 	 }
@@ -238,23 +144,27 @@ func_definition : t=type_specifier id=ID {
 			info.returnType = $t.text;
 			symbolTable->Insert($id.text, "ID",  info);
 		}
-		code = $id.text + " PROC\n";
-		code += "push BP\n";
-		code += "mov BP, SP\n";
-		stackOffset = 0;
-        writeIntoAssemblyFile(code);
 } lp=LPAREN { symbolTable->Enter_scope(); } pl=parameter_list { 
 if($pl.params.size() == $pl.names.size()){
 		for(int i = 0; i < $pl.params.size(); i++){
+			if($pl.names[i] == "error"){
+				// writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ": syntax error, unexpected ADDOP, expecting RPAREN or COMMA\n");
+				// writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ": syntax error, unexpected ADDOP, expecting RPAREN or COMMA\n");
+				writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ": syntax error\n");
+				writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ": syntax error\n");
+				writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ": " + std::to_string(i+1) + "th parameter's name not given in function definition of " + $id.text + "\n");
+				writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ": " + std::to_string(i+1) + "th parameter's name not given in function definition of " + $id.text + "\n");
+				syntaxErrorCount++;
+				continue;
+			}
+			if(symbolTable->LookUp2($pl.names[i])){
+				writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + " Multiple declaration of " + $pl.names[i] + " in parameter" + "\n");
+				writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + " Multiple declaration of " + $pl.names[i] + " in parameter" + "\n");
+				syntaxErrorCount++;
+				continue;
+			}
 		SymbolAdditionalInfo info = SymbolAdditionalInfo();
 		info.dataType = $pl.params[i];
-		info.isGlobal = (symbolTable->getCurrentScopeId() == "1")? true : false;
-		stackOffset += 2;
-		info.offset = stackOffset;
-		code = "SUB SP, 2\n";
-		code += "MOV AX, [BP + " + std::to_string(($pl.params.size() - i) * 2 + 2) + "]" + "\n";
-		code += "MOV [BP - " + std::to_string(stackOffset) + "], AX\n";
-		writeIntoAssemblyFile(code);
 		symbolTable->Insert($pl.names[i], "ID", info);
 	}
 }
@@ -283,17 +193,6 @@ if($pl.params.size() == $pl.names.size()){
  } cm_stmt=compound_statement[true] {
 			writeIntoparserLogFile("Line " + std::to_string($cm_stmt.stop->getLine()) + ":" + " func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement\n");
 			writeIntoparserLogFile($t.text + " " + $id.text + $lp.text + $pl.text + $rp.text + $cm_stmt.text + "\n");
-			code = "MOV SP, BP\n";
-			code += "POP BP\n";
-			if($id.text == "main"){
-				code += "MOV AX, 4CH\n";
-				code += "INT 21h\n";
-			}
-			else{
-				code += "RET\n";
-			}
-			code += $id.text + " ENDP\n";
-            writeIntoAssemblyFile(code);
 }
 		| t=type_specifier id=ID {
 	existing = symbolTable->LookUp($id.text);
@@ -317,11 +216,6 @@ if($pl.params.size() == $pl.names.size()){
 			info.returnType = $t.text;
 			symbolTable->Insert($id.text, "ID",  info);
 		}
-        code = $id.text + " PROC\n";
-		code += "push BP\n";
-		code += "mov BP, SP\n";
-		stackOffset = 0;
-        writeIntoAssemblyFile(code);
 } lp=LPAREN { symbolTable->Enter_scope(); } rp=RPAREN {
 		existing = symbolTable->LookUp($id.text);
 		if(existing && existing->additionalInfo.isFunction){
@@ -342,17 +236,6 @@ if($pl.params.size() == $pl.names.size()){
 } cm_stmt=compound_statement[true] {
 			writeIntoparserLogFile("Line " + std::to_string($cm_stmt.stop->getLine()) + ":" + " func_definition : type_specifier ID LPAREN RPAREN compound_statement\n");
 			writeIntoparserLogFile($t.text + " " + $id.text + $lp.text + $rp.text + $cm_stmt.text + "\n");
-            code = "MOV SP, BP\n";
-			code += "POP BP\n";
-			if($id.text == "main"){
-				code += "MOV AX, 4CH\n";
-				code += "INT 21h\n";
-			}
-			else{
-				code += "RET\n";
-			}
-			code += $id.text + " ENDP\n";
-            writeIntoAssemblyFile(code);
 	}
  		;				
 
@@ -428,39 +311,28 @@ compound_statement[bool IsFunction] : LCURL {
  		    
 var_declaration 
     : t=type_specifier dl=declaration_list sm=SEMICOLON {
-        cout << $dl.decls.size() << endl;
+		writeIntoparserLogFile("Line " + std::to_string($sm->getLine()) + ":" + " var_declaration : type_specifier declaration_list SEMICOLON\n");
+		writeIntoparserLogFile($t.text + " " + $dl.text + $sm.text + "\n");
 		for(int i = 0; i < $dl.decls.size(); i++) {
-
-			SymbolAdditionalInfo info = SymbolAdditionalInfo();
-			info.dataType = $t.text;
-			info.isArray = $dl.decls[i].second;
-			info.arraySize = $dl.arrsize[i];
-			info.isGlobal = (symbolTable->getCurrentScopeId() == "1")? true : false;
-
-			if(info.isGlobal){
-				if($dl.decls[i].second){
-					datacode = $dl.decls[i].first + " DW " + std::to_string($dl.arrsize[i]) + " DUP(0)\n";
+			if(symbolTable->LookUp2($dl.decls[i].first)) {
+				writeIntoparserLogFile("Error at line " + std::to_string($sm->getLine()) + ": Multiple declaration of " + $dl.decls[i].first + "\n");
+				writeIntoErrorFile("Error at line " + std::to_string($sm->getLine()) + ": Multiple declaration of " + $dl.decls[i].first + "\n");
+				syntaxErrorCount++;
+			} else {
+				SymbolAdditionalInfo info = SymbolAdditionalInfo();
+				info.dataType = $t.text;
+				info.isArray = $dl.decls[i].second;
+				info.arraySize = $dl.arrsize[i];
+				if($dl.decls[i].first != "error_id")
+				{
+					hasInserted = symbolTable->Insert($dl.decls[i].first, "ID", info);
 				}
-				else{
-					datacode = $dl.decls[i].first + " DW 0\n";
-				}
-				writeIntoAssemblyFile(datacode);
-			}
-			else{
-				if($dl.decls[i].second){
-					code = "SUB SP, " + std::to_string($dl.arrsize[i] * 2) + "\n";
-					stackOffset += $dl.arrsize[i] * 2;
-					info.offset = stackOffset;
-                    writeIntoAssemblyFile(code);
-				}
-				else{
-					code = "SUB SP, 2\n";
-					stackOffset += 2;
-					info.offset = stackOffset;
-                    writeIntoAssemblyFile(code);
+				if($t.text == "void"){
+					writeIntoparserLogFile("Error at line " + std::to_string($sm->getLine()) + ": Variable type cannot be void\n");
+					writeIntoErrorFile("Error at line " + std::to_string($sm->getLine()) + ": Variable type cannot be void\n");
+					syntaxErrorCount++;
 				}
 			}
-			symbolTable->Insert($dl.decls[i].first, "ID", info);
 		}
       }
 
@@ -573,111 +445,46 @@ statement : var_dec=var_declaration {
 	writeIntoparserLogFile("Line " + std::to_string($cm_stmt.stop->getLine()) + ":" + " statement : compound_statement\n");
 	writeIntoparserLogFile($cm_stmt.text +"\n");
 	  }
-	  | fr=FOR lp=LPAREN expr_stmt1=expression_statement {
-		forlabel = newLabel();
-		code = forlabel + ":\n";
-		writeIntoAssemblyFile(code);
-	  } expr_stmt2=expression_statement {
-		code = "POP AX\n";
-		code += "CMP AX, 0\n";
-		forlabel2 = newLabel();
-		code += "JE " + forlabel2 + "\n";
-		forlabel3 = newLabel();
-		code += "JMP " + forlabel3 + "\n";
-		forlabel4 = newLabel();
-		code += forlabel4 + ":\n";
-		writeIntoAssemblyFile(code);
-	  } expr=expression {
-		code = "JMP " + forlabel + "\n";
-		writeIntoAssemblyFile(code);
-	  } rp=RPAREN {
-		code = forlabel3 + ":\n";
-		writeIntoAssemblyFile(code);
-	  } stmt=statement {
-		code = "JMP " + forlabel4 + "\n";
-		code += forlabel2 + ":\n";
-		writeIntoAssemblyFile(code);
+	  | fr=FOR lp=LPAREN expr_stmt1=expression_statement expr_stmt2=expression_statement expr=expression rp=RPAREN stmt=statement {
+	writeIntoparserLogFile("Line " + std::to_string($fr->getLine()) + ":" + " statement : FOR LPAREN expression_statement expression_statement expression RPAREN statement\n");
+	writeIntoparserLogFile($fr.text + $lp.text + $expr_stmt1.text + $expr_stmt2.text + $expr.text + $rp.text + $stmt.text +"\n");
 	  }
-	  | iff=IF lp=LPAREN expr=expression rp=RPAREN {
-
-		code = "POP AX\n";
-		code += "CMP AX, 0\n";
-		str = newLabel();
-		code += "JE " + str + "\n";
-		writeIntoAssemblyFile(code);
-	  } stmt=statement {
-		code = str + ":\n";
-		writeIntoAssemblyFile(code);
+	  | iff=IF lp=LPAREN expr=expression rp=RPAREN stmt=statement {
+	writeIntoparserLogFile("Line " + std::to_string($iff->getLine()) + ":" + " statement : IF LPAREN expression RPAREN statement\n");
+	writeIntoparserLogFile($iff.text + $lp.text + $expr.text + $rp.text + $stmt.text + "\n");
 	  }
-	  | iff=IF lp=LPAREN expr=expression rp=RPAREN {
-
-		code = "POP AX\n";
-		code += "CMP AX, 0\n";
-		str = newLabel();
-		code += "JE " + str + "\n";
-		writeIntoAssemblyFile(code);
-
-	  } stmt1=statement {
-
-		str2 = newLabel();
-		code = "JMP " + str2 + "\n";
-		writeIntoAssemblyFile(code);
-		labelStack.push(str2);
-
-	  } els=ELSE {
-
-		code = str + ":\n";
-		writeIntoAssemblyFile(code);
-
-	  } stmt2=statement {
-
-		code = labelStack.top() + ":\n";
-		labelStack.pop();
-		writeIntoAssemblyFile(code);
+	  | iff=IF lp=LPAREN expr=expression rp=RPAREN stmt1=statement els=ELSE stmt2=statement {
+	writeIntoparserLogFile("Line " + std::to_string($iff->getLine()) + ":" + " statement : IF LPAREN expression RPAREN statement ELSE statement\n");
+	writeIntoparserLogFile($iff.text + $lp.text + $expr.text + $rp.text + $stmt1.text + $els.text + $stmt2.text + "\n");
 	  }
-	  | whl=WHILE lp=LPAREN {
-		whilelabel = newLabel();
-		code = whilelabel + ":\n";
-		writeIntoAssemblyFile(code);
-	  } expr=expression rp=RPAREN {
-		code = "POP AX\n";
-		code += "CMP AX, 0\n";
-		whilelabel2 = newLabel();
-		code += "JE " + whilelabel2 + "\n";
-		writeIntoAssemblyFile(code);
-	  } stmt=statement {
-		code = "JMP " + whilelabel + "\n";
-		code += whilelabel2 + ":\n";
-		writeIntoAssemblyFile(code);
+	  | whl=WHILE lp=LPAREN expr=expression rp=RPAREN stmt=statement {
+	writeIntoparserLogFile("Line " + std::to_string($whl->getLine()) + ":" + " statement : WHILE LPAREN expression RPAREN statement\n");
+	writeIntoparserLogFile($whl.text + $lp.text + $expr.text + $rp.text + $stmt.text + "\n");
 	  }
 	  | prln=PRINTLN lp=LPAREN id=ID rp=RPAREN sm=SEMICOLON {
 	writeIntoparserLogFile("Line " + std::to_string($prln->getLine()) + ":" + " statement : PRINTLN LPAREN ID RPAREN SEMICOLON\n");
 	writeIntoparserLogFile($prln.text + $lp.text + $id.text + $rp.text + $sm.text + "\n");
 	existing = symbolTable->LookUp($id.text);
-	if(existing) {
+	if(!existing) {
+		writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + " Undeclared variable " + $id.text + "\n");
+		writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + " Undeclared variable " + $id.text + "\n");
+		syntaxErrorCount++;
+	} else {
 		if(existing->additionalInfo.isArray) {
-
+			writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + $id.text + " is an array" + "\n");
+			writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + $id.text + " is an array" + "\n");
+			syntaxErrorCount++;
 		}
-		else{
-			if(existing->additionalInfo.isGlobal){
-				code = "MOV AX, " + $id.text + "\n";
-				code += "CALL print_output\n";
-				writeIntoAssemblyFile(code);
-			}
-			else{
-				code = "MOV AX, [BP - " + std::to_string(existing->additionalInfo.offset) + "]\n";
-				code += "CALL print_output\n";
-				writeIntoAssemblyFile(code);
-			}
+		if(existing->additionalInfo.dataType != "int" && existing->additionalInfo.dataType != "float") {
+			writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ": Variable type not int or float in printf\n");
+			writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ": Variable type not int or float in printf\n");
+			syntaxErrorCount++;
 		}
 	}
 	  }
 	  | rtn=RETURN expr=expression sm=SEMICOLON {
 	writeIntoparserLogFile("Line " + std::to_string($rtn->getLine()) + ":" + " statement : RETURN expression SEMICOLON\n");
 	writeIntoparserLogFile($rtn.text + " " + $expr.text + $sm.text + "\n\n");
-	code = "POP CX\n";
-	writeIntoAssemblyFile(code);
-	hasreturn = true;
 	  }
 	  ;
 	  
@@ -691,7 +498,7 @@ expression_statement 	: SEMICOLON	{
 			}
 			;
 	  
-variable returns [std::string datatype,std::string place,std::string index]: ID  {
+variable returns [std::string datatype]: ID  {
 	writeIntoparserLogFile("Line " + std::to_string($ID->getLine()) + ":" + " variable : ID\n");
 	writeIntoparserLogFile($ID->getText() + "\n");
 	existing = symbolTable->LookUp($ID->getText());
@@ -709,21 +516,6 @@ variable returns [std::string datatype,std::string place,std::string index]: ID 
 		syntaxErrorCount++;
 		$datatype = "error";
 	}
-    existing = symbolTable->LookUp($ID->getText());
-    if(existing){
-        if(existing->additionalInfo.isGlobal){
-            code = "MOV AX, " + $ID->getText() + "\n";
-            code += "PUSH AX\n";
-            writeIntoAssemblyFile(code);
-        }
-        else{
-            code = "MOV AX, [BP - " + std::to_string(existing->additionalInfo.offset) + "]\n";
-            code += "PUSH AX\n";
-            writeIntoAssemblyFile(code);
-        }
-    }
-	$place = $ID->getText();
-	$index = "";
 }		
 	 | ID LTHIRD expr=expression RTHIRD {
 	writeIntoparserLogFile("Line " + std::to_string($LTHIRD->getLine()) + ":" + " variable : ID LTHIRD expression RTHIRD\n");
@@ -731,32 +523,23 @@ variable returns [std::string datatype,std::string place,std::string index]: ID 
 	existing = symbolTable->LookUp($ID->getText());
 	if(existing) {
 		$datatype = existing->additionalInfo.dataType;
-		if(existing->additionalInfo.isGlobal){
-			code = "LEA SI, " + $ID->getText() + "\n";
-			code += "POP AX\n";
-			code += "SHL AX, 1\n";
-			code += "ADD SI, AX\n";
-			code += "PUSH AX\n";
-			code += "MOV AX, [SI]\n";
-			code += "PUSH AX\n";
-			writeIntoAssemblyFile(code);
-		}
-		else{
-			code = "POP AX\n";
-			code += "SHL AX, 1\n";
-			code += std::string("MOV BX, ") + std::to_string(existing->additionalInfo.offset) + "\n";
-			code += "SUB BX, AX\n";
-			code += "PUSH BX\n";
-			code += "PUSH BP\n";
-			code += "SUB BP, BX\n";
-			code += "MOV AX, [BP]\n";
-			code += "POP BP\n";
-			code += "PUSH AX\n";
-			writeIntoAssemblyFile(code);
+		if(!existing->additionalInfo.isArray){
+			writeIntoparserLogFile("Error at line " + std::to_string($ID->getLine()) + ": " + $ID->getText() + " not an array" + "\n");
+			writeIntoErrorFile("Error at line " + std::to_string($ID->getLine()) + ": " + $ID->getText() + " not an array" + "\n");
+			syntaxErrorCount++;
 		}
 	}
-	$place = $ID->getText();
-	$index = $expr.text;
+	else{
+		writeIntoparserLogFile("Error at line " + std::to_string($ID->getLine()) + ":" + " Undeclared variable " + $ID->getText() + "\n");
+		writeIntoErrorFile("Error at line " + std::to_string($ID->getLine()) + ":" + " Undeclared variable " + $ID->getText() + "\n");
+		syntaxErrorCount++;
+		$datatype = "error";
+	}
+	if($expr.datatype != "int") {
+		writeIntoparserLogFile("Error at line " + std::to_string($expr.start->getLine()) + ": Expression inside third brackets not an integer" + "\n");
+		writeIntoErrorFile("Error at line " + std::to_string($expr.start->getLine()) + ": Expression inside third brackets not an integer" + "\n");
+		syntaxErrorCount++;
+	}
 	 }
 	 ;
 	 
@@ -769,44 +552,15 @@ variable returns [std::string datatype,std::string place,std::string index]: ID 
 	writeIntoparserLogFile("Line " + std::to_string($ASSIGNOP->getLine()) + ":" + " expression : variable ASSIGNOP logic_expression\n");
 	writeIntoparserLogFile($var.text + $ASSIGNOP->getText() + $lgexpr.text + "\n");
 	$datatype = $var.datatype;
-	existing = symbolTable->LookUp($var.place);
-	if(existing){
-		if(existing->additionalInfo.isArray){
-			if(existing->additionalInfo.isGlobal){
-				code = "POP AX\n";
-				code += "POP BX\n";
-				code += "POP BX\n";
-				code += "LEA SI, " + $var.place + "\n";
-				code += "ADD SI, BX\n";
-				code += "MOV [SI], AX\n";
-				code += "PUSH AX\n";
-				writeIntoAssemblyFile(code);
-			}
-			else{
-				code = "POP AX\n";
-				code += "POP BX\n";
-				code += "POP BX\n";
-				code += "PUSH BP\n";
-				code += "SUB BP, BX\n";
-				code += "MOV [BP], AX\n";
-				code += "POP BP\n";
-				code += "PUSH AX\n";
-				writeIntoAssemblyFile(code);
-			}
-		}
-		if(existing->additionalInfo.isGlobal){
-			code = "POP BX\n";
-	        code += "POP AX\n";
-			code += "MOV " + $var.place + ", BX\n";
-			code += "PUSH BX\n";
-		}
-		else{
-			code = "POP BX\n";
-	        code += "POP AX\n";
-			code += "MOV [BP - " + std::to_string(existing->additionalInfo.offset) + "], BX\n";
-			code += "PUSH BX\n";
-		}
-		writeIntoAssemblyFile(code);
+	if(($var.datatype == "int") && ($lgexpr.datatype == "float")) {
+		writeIntoErrorFile("Error at line " + std::to_string($lgexpr.start->getLine()) + ": Type mismatch" + "\n");
+		writeIntoparserLogFile("Error at line " + std::to_string($lgexpr.start->getLine()) + ": Type mismatch" + "\n");
+		syntaxErrorCount++;
+	}
+	if($lgexpr.datatype == "void") {
+		writeIntoErrorFile("Error at line " + std::to_string($lgexpr.start->getLine()) + ": Void function used in expression" + "\n");
+		writeIntoparserLogFile("Error at line " + std::to_string($lgexpr.start->getLine()) + ": Void function used in expression" + "\n");
+		syntaxErrorCount++;
 	}
 	   }	
 	   ;
@@ -820,17 +574,6 @@ logic_expression returns [std::string datatype]: rlexpr=rel_expression {
 	writeIntoparserLogFile("Line " + std::to_string($LOGICOP->getLine()) + ":" + " logic_expression : rel_expression LOGICOP rel_expression\n");
 	writeIntoparserLogFile($rlexpr1.text + $LOGICOP->getText() + $rlexpr2.text + "\n");
 	$datatype = $rlexpr1.datatype;
-		code = "POP BX\n";
-		code += "POP AX\n";
-		if($LOGICOP->getText() == "&&"){
-			code += "AND AX, BX\n";
-			code += "PUSH AX\n";
-		}
-		else if($LOGICOP->getText() == "||"){
-			code += "OR AX, BX\n";
-			code += "PUSH AX\n";
-		}
-		writeIntoAssemblyFile(code);
 		 }	
 		 ;
 			
@@ -843,71 +586,6 @@ rel_expression	returns [std::string datatype]: smexpr=simple_expression {
 	writeIntoparserLogFile("Line " + std::to_string($RELOP->getLine()) + ":" + " rel_expression : simple_expression RELOP simple_expression\n");
 	writeIntoparserLogFile($smexpr1.text + $RELOP->getText() + $smexpr2.text + "\n");
 	$datatype = $smexpr1.datatype;
-
-	    code = "POP BX\n";
-		code += "POP AX\n";
-		str = newLabel();
-		if($RELOP->getText() == "=="){
-			code += "CMP AX, BX\n";
-			code += std::string("JE ") + str + "\n";
-			code += "MOV AX, 0\n";
-			code += std::string("JMP ") + str + "_end\n";
-			code += str + ":\n";
-			code += "MOV AX, 1\n";
-			code += str + "_end:\n";
-			code += "PUSH AX\n";
-		}
-		else if($RELOP->getText() == "!="){
-			code += "CMP AX, BX\n";
-			code += std::string("JNE ") + str + "\n";
-			code += "MOV AX, 0\n";
-			code += std::string("JMP ") + str + "_end\n";
-			code += str + ":\n";
-			code += "MOV AX, 1\n";
-			code += str + "_end:\n";
-			code += "PUSH AX\n";
-		}
-		else if($RELOP->getText() == "<"){
-			code += "CMP AX, BX\n";
-			code += std::string("JL ") + str + "\n";
-			code += "MOV AX, 0\n";
-			code += std::string("JMP ") + str + "_end\n";
-			code += str + ":\n";
-			code += "MOV AX, 1\n";
-			code += str + "_end:\n";
-			code += "PUSH AX\n";
-		}
-		else if($RELOP->getText() == "<="){
-			code += "CMP AX, BX\n";
-			code += std::string("JLE ") + str + "\n";
-			code += "MOV AX, 0\n";
-			code += std::string("JMP ") + str + "_end\n";
-			code += str + ":\n";
-			code += "MOV AX, 1\n";
-			code += str + "_end:\n";
-			code += "PUSH AX\n";
-		}
-		else if($RELOP->getText() == ">"){
-			code += "CMP AX, BX\n";
-			code += std::string("JG ") + str + "\n";
-			code += "MOV AX, 0\n";
-			code += std::string("JMP ") + str + "_end\n";
-			code += str + ":\n";
-			code += "MOV AX, 1\n";
-			code += str + "_end:\n";
-			code += "PUSH AX\n"; // result in AX
-		}
-		else if($RELOP->getText() == ">="){
-			code += "CMP AX, BX\n";
-			code += std::string("JGE ") + str + "\n";
-			code += "MOV AX, 0\n";
-			code += std::string("JMP ") + str + "_end\n";
-			code += str + ":\n";
-			code += "MOV AX, 1\n";
-			code += str + "_end:\n";
-			code += "PUSH AX\n"; // result in AX
-		}
-		writeIntoAssemblyFile(code);
 		}
 		;
 				
@@ -925,18 +603,16 @@ simple_expression returns [std::string datatype]: trm=term {
 	else{
 		$datatype = "int";
 	}
-	    code = "POP BX\n";
-		code += "POP AX\n";
-		if($ADDOP->getText() == "+"){
-			code += "ADD AX, BX\n";
-			code += "PUSH AX\n";
-		}
-		else if($ADDOP->getText() == "-"){
-			code += "SUB AX, BX\n";
-			code += "PUSH AX\n"; // difference in AX
-		}
-		writeIntoAssemblyFile(code);
-	}
+		  }
+		  | smexpr=simple_expression {
+			// writeIntoparserLogFile("Error at line " + std::to_string($smexpr.start->getLine()) + ": syntax error, unexpected ASSIGNOP\n");
+			// writeIntoErrorFile("Error at line " + std::to_string($smexpr.start->getLine()) + ": syntax error, unexpected ASSIGNOP\n");
+			writeIntoparserLogFile("Error at line " + std::to_string($smexpr.start->getLine()) + ": syntax error\n");
+			writeIntoErrorFile("Error at line " + std::to_string($smexpr.start->getLine()) + ": syntax error\n");
+			   syntaxErrorCount++;
+		  } ADDOP ASSIGNOP trm=term {
+			$datatype = "error";
+		  }
 		  ;
 					
 term returns [std::string datatype]:	unexpr=unary_expression {
@@ -956,46 +632,45 @@ term returns [std::string datatype]:	unexpr=unary_expression {
 	else{
 		$datatype = "int";
 	}
-		code = "POP BX\n";
-		code += "POP AX\n";
-		if($MULOP->getText() == "*"){
-			code += "MUL BX\n";
-			code += "PUSH AX\n";
-		}
-		else if($MULOP->getText() == "/"){
-			code += "XOR DX, DX\n";
-			code += "DIV BX\n";
-			code += "PUSH AX\n"; // quotient in AX
-		}
-		else if($MULOP->getText() == "%"){
-			code += "XOR DX, DX\n";
-			code += "DIV BX\n";
-			code += "PUSH DX\n"; // remainder in DX
-		}
-		writeIntoAssemblyFile(code);
+	if($MULOP->getText() == "%" && ($unexpr.datatype == "float" || $trm.datatype == "float")) {
+		writeIntoErrorFile("Error at line " + std::to_string($MULOP->getLine()) + ": Non-Integer operand on modulus operator" + "\n");
+		writeIntoparserLogFile("Error at line " + std::to_string($MULOP->getLine()) + ": Non-Integer operand on modulus operator" + "\n");
+		syntaxErrorCount++;
+	}
+	if($MULOP->getText() == "%" && $unexpr.text == "0"){
+		writeIntoErrorFile("Error at line " + std::to_string($MULOP->getLine()) + ": Modulus by Zero" + "\n");
+		writeIntoparserLogFile("Error at line " + std::to_string($MULOP->getLine()) + ": Modulus by Zero" + "\n");
+		syntaxErrorCount++;
+	}
+	if($MULOP->getText() == "/" && $unexpr.text == "0"){
+		writeIntoErrorFile("Error at line " + std::to_string($MULOP->getLine()) + ": Division by Zero" + "\n");
+		writeIntoparserLogFile("Error at line " + std::to_string($MULOP->getLine()) + ": Division by Zero" + "\n");
+		syntaxErrorCount++;
+	}
+	if($trm.datatype == "void" || $unexpr.datatype == "void") {
+		writeIntoErrorFile("Error at line " + std::to_string($MULOP->getLine()) + ": Void function used in expression" + "\n");
+		writeIntoparserLogFile("Error at line " + std::to_string($MULOP->getLine()) + ": Void function used in expression" + "\n");
+		syntaxErrorCount++;
+	}
 	 }
+	 |unary_expression HASH {
+		// writeIntoparserLogFile("Error at line " + std::to_string($HASH->getLine()) + ": Unrecognized character #\n");
+		// writeIntoErrorFile("Error at line " + std::to_string($HASH->getLine()) + ": Unrecognized character #\n");
+		writeIntoparserLogFile("Error at line " + std::to_string($HASH->getLine()) + ":" + " syntax error\n");
+		writeIntoErrorFile("Error at line " + std::to_string($HASH->getLine()) + ":" + " syntax error\n");
+		syntaxErrorCount++;
+	}
      ;
 
 unary_expression returns [std::string datatype]: ADDOP unexpr=unary_expression  {
 		writeIntoparserLogFile("Line " + std::to_string($ADDOP->getLine()) + ":" + " unary_expression : ADDOP unary_expression\n");
 		writeIntoparserLogFile($ADDOP->getText() + $unexpr.text + "\n");
 		$datatype = $unexpr.datatype;
-		if($ADDOP->getText() == "-"){
-			code = "POP AX\n";
-			code += "NEG AX\n";
-			code += "PUSH AX\n";
-			writeIntoAssemblyFile(code);
-		}
 }
 		| NOT unexpr=unary_expression {
 		writeIntoparserLogFile("Line " + std::to_string($NOT->getLine()) + ":" + " unary_expression : NOT unary_expression\n");
 		writeIntoparserLogFile($NOT->getText() + $unexpr.text + "\n");
 		$datatype = "int";
-		code = "POP AX\n";
-		code += "NOT AX\n";
-		code += "PUSH AX\n";
-		writeIntoAssemblyFile(code);
-
 		}
 		| fctr=factor {
 		writeIntoparserLogFile("Line " + std::to_string($fctr.start->getLine()) + ":" + " unary_expression : factor\n");
@@ -1005,33 +680,40 @@ unary_expression returns [std::string datatype]: ADDOP unexpr=unary_expression  
 		 ;
 	
 factor returns [std::string datatype]	: var=variable {
+		writeIntoparserLogFile("Line " + std::to_string($var.start->getLine()) + ":" + " factor : variable\n");
+		writeIntoparserLogFile($var.text + "\n");
 		$datatype = $var.datatype;
-		existing = symbolTable->LookUp($var.text);
-		if(existing){
-			if(existing->additionalInfo.isArray){
-				code = "POP AX\n";
-				code += "POP BX\n";
-				code += "PUSH AX\n";
-				writeIntoAssemblyFile(code);
-			}
-		}
     }
 	| id=ID lp=LPAREN argl=argument_list rp=RPAREN {
 		writeIntoparserLogFile("Line " + std::to_string($argl.start->getLine()) + ":" + " factor : ID LPAREN argument_list RPAREN\n");
 		writeIntoparserLogFile($id.text + $lp.text + $argl.text + $rp.text + "\n");
-		$datatype = existing->additionalInfo.returnType;
 		existing = symbolTable->LookUp($id.text);
-		code = "CALL " + $id.text + "\n";
-		for(int i = 0; i< $argl.argtypes.size(); i++) {
-			code += "POP DX\n";
+		if(existing && existing->additionalInfo.isDefined && existing->additionalInfo.isFunction){
+			$datatype = existing->additionalInfo.returnType;
+			if($argl.argtypes != existing->additionalInfo.parameters){
+			if(existing->additionalInfo.parameters.size() != $argl.argtypes.size()){
+				writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + " Total number of argument mismatch in function " + $id.text + "\n");
+				writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + " Total number of argument mismatch in function " + $id.text + "\n");
+				syntaxErrorCount++;
+			}
+			else{
+				for(int i = 0; i < $argl.argtypes.size(); i++){
+					if($argl.argtypes[i] != existing->additionalInfo.parameters[i]){
+						writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ": " + std::to_string(i+1) + "th argument mismatch in function " + $id.text + "\n");
+						writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ": " + std::to_string(i+1) + "th argument mismatch in function " + $id.text + "\n");
+						syntaxErrorCount++;
+						break;
+					}
+				}
+			}
 		}
-		// if(hasreturn){
-		// 	code += "PUSH CX\n";
-		// 	hasreturn = false;
-		// }
-
-		code += "PUSH CX\n";
-		writeIntoAssemblyFile(code);
+		}
+		else{
+			writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + " Undeclared function " + $id.text + "\n");
+			writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + " Undeclared function " + $id.text + "\n");
+			syntaxErrorCount++;
+			$datatype = "error";
+		}
 	}
 	| lp=LPAREN expr=expression rp=RPAREN {
 		writeIntoparserLogFile("Line " + std::to_string($expr.start->getLine()) + ":" + " factor : LPAREN expression RPAREN\n");
@@ -1042,9 +724,6 @@ factor returns [std::string datatype]	: var=variable {
 		writeIntoparserLogFile("Line " + std::to_string($CONST_INT->getLine()) + ":" + " factor : CONST_INT\n");
 		writeIntoparserLogFile($CONST_INT->getText() + "\n");
 		$datatype = "int";
-		code = "MOV AX, " + $CONST_INT->getText() + "\n";
-		code += "PUSH AX\n";
-		writeIntoAssemblyFile(code);
 	}
 	| CONST_FLOAT {
 		writeIntoparserLogFile("Line " + std::to_string($CONST_FLOAT->getLine()) + ":" + " factor : CONST_FLOAT\n");
@@ -1055,79 +734,11 @@ factor returns [std::string datatype]	: var=variable {
 		writeIntoparserLogFile("Line " + std::to_string($INCOP->getLine()) + ":" + " factor : variable INCOP\n");
 		writeIntoparserLogFile($INCOP->getText() + "\n");
 		$datatype = $var.datatype;
-		existing = symbolTable->LookUp($var.place);
-		if(existing){
-			if(existing->additionalInfo.isArray){
-				if(existing->additionalInfo.isGlobal){
-					code = "LEA SI, " + $var.text + "\n";
-					code += "POP AX\n";
-					code += "POP BX\n";
-					code += "ADD SI, BX\n";
-					code += "INC WORD PTR[SI]\n";
-					code += "PUSH AX\n";
-					writeIntoAssemblyFile(code);
-				}
-				else{
-					code = "POP AX\n";
-					code += "POP BX\n";
-					code += "PUSH BP\n";
-					code += "SUB BP, BX\n";
-					code += "INC WORD PTR[BP]\n";
-					code += "POP BP\n";
-					code += "PUSH AX\n";
-					writeIntoAssemblyFile(code);
-				}
-			}
-			else{
-				if(existing->additionalInfo.isGlobal){
-					code = "INC " + $var.text + "\n";
-					writeIntoAssemblyFile(code);
-				}
-				else{
-					code = "INC WORD PTR[BP - " + std::to_string(existing->additionalInfo.offset) + "]\n";
-					writeIntoAssemblyFile(code);
-				}
-			}
-		}
 	}
 	| var=variable DECOP {
 		writeIntoparserLogFile("Line " + std::to_string($DECOP->getLine()) + ":" + " factor : variable DECOP\n");
 		writeIntoparserLogFile($DECOP->getText() + "\n");
 		$datatype = $var.datatype;
-		existing = symbolTable->LookUp($var.text);
-		if(existing){
-			if(existing->additionalInfo.isArray){
-				if(existing->additionalInfo.isGlobal){
-					code = "LEA SI, " + $var.text + "\n";
-					code += "POP AX\n";
-					code += "POP BX\n";
-					code += "ADD SI, BX\n";
-					code += "DEC WORD PTR[SI]\n";
-					code += "PUSH AX\n";
-					writeIntoAssemblyFile(code);
-				}
-				else{
-					code = "POP AX\n";
-					code += "POP BX\n";
-					code += "PUSH BP\n";
-					code += "SUB BP, BX\n";
-					code += "DEC WORD PTR[BP]\n";
-					code += "POP BP\n";
-					code += "PUSH AX\n";
-					writeIntoAssemblyFile(code);
-				}
-			}
-			else{
-				if(existing->additionalInfo.isGlobal){
-					code = "DEC " + $var.text + "\n";
-					writeIntoAssemblyFile(code);
-				}
-				else{
-					code = "DEC WORD PTR[BP - " + std::to_string(existing->additionalInfo.offset) + "]\n";
-					writeIntoAssemblyFile(code);
-				}
-			}
-		}
 	}
 	;
 	

@@ -11,6 +11,7 @@ using namespace std;
 ofstream parserLogFile; // global output stream
 ofstream errorFile; // global error stream
 ofstream lexLogFile; // global lexer log stream
+ofstream assemblyFile; // global assembly output stream
 
 int syntaxErrorCount;
 
@@ -31,6 +32,7 @@ int main(int argc, const char* argv[]) {
     string parserLogFileName = outputDirectory + "parserLog.txt";
     string errorFileName = outputDirectory + "errorLog.txt";
     string lexLogFileName = outputDirectory + "lexerLog.txt";
+    string assemblyFileName = outputDirectory + "assemblyOutput.txt";
 
     // create output directory if it doesn't exist
     system(("mkdir -p " + outputDirectory).c_str());
@@ -53,6 +55,12 @@ int main(int argc, const char* argv[]) {
         cerr << "Error opening lexer log file: " << lexLogFileName << endl;
         return 1;
     }
+
+    assemblyFile.open(assemblyFileName);
+    if (!assemblyFile.is_open()) {
+        cerr << "Error opening assembly output file: " << assemblyFileName << endl;
+        return 1;
+    }
    
     // ---- Parsing Flow ----
     ANTLRInputStream input(inputFile);
@@ -71,6 +79,7 @@ int main(int argc, const char* argv[]) {
     parserLogFile.close();
     errorFile.close();
     lexLogFile.close();
+    assemblyFile.close();
     cout << "Parsing completed. Check the output files for details." << endl;
     return 0;
 }

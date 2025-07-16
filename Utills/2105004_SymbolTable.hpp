@@ -115,6 +115,10 @@ class SymbolTable{
         }
         return scopeCount > 0 ? total_ratio / scopeCount : 0.0;
     }
+
+    string getCurrentScopeId() {
+        return current->getScopeId();
+    }
 };
 
 #endif // SYMBOL_TABLE_HPP

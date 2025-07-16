@@ -23,6 +23,27 @@ options {
 	SymbolTable *symbolTable = new SymbolTable(7,parserLogFile);
 	bool hasInserted = false;
 	SymbolInfo *existing;
+	string code = "";
+	string str = "";
+	string datacode = "";
+	int labelCount = 0;
+	int tempVarCount = 0;
+	std::map<std::string, int> varOffsetMap;
+	int stackOffset = 0;
+	bool isGlobal = false;
+	vector<std::string> globalVariables;
+
+	std::string newLabel() {
+		return "L" + std::to_string(labelCount++);
+	}
+
+	std::string newTempVariable() {
+		std::string tempVar = "temp" + std::to_string(tempVarCount++);
+		stackOffset += 2;
+		code += "SUB SP, 2\n";
+		varOffsetMap[tempVar] = stackOffset;
+		return tempVar;
+	}
 
 	void writeIntoparserLogFile(const std::string message) {
         if (!parserLogFile) {
@@ -33,6 +54,10 @@ options {
         parserLogFile << message << std::endl;
         parserLogFile.flush();
     }
+
+	bool isGlobalVariable(const std::string &varName) {
+		return std::find(globalVariables.begin(), globalVariables.end(), varName) != globalVariables.end();
+	}
 
 	// void notifyErrorListeners(antlr4::Token *offendingToken, const std::string &msg, std::exception_ptr e) override {
     //     syntaxErrorCount++;
@@ -60,6 +85,10 @@ start : pg=program
 		delete symbolTable;
 		writeIntoparserLogFile("Total number of lines:" + std::to_string($pg.stop->getLine()) + "\n");
 		writeIntoparserLogFile("Total number of errors: " + std::to_string(syntaxErrorCount) + "\n");
+
+		str = ".model small\n.stack 1000h\n.data\n";
+
+		code = str + code;
 	}
 	;
 
@@ -139,8 +168,15 @@ func_definition : t=type_specifier id=ID {
 		else{
 			SymbolAdditionalInfo info = SymbolAdditionalInfo();
 			info.deleted = true;
+			info.isFunction = true;
+			info.isDefined = true;
+			info.returnType = $t.text;
 			symbolTable->Insert($id.text, "ID",  info);
 		}
+		code += $id.text + " PROC\n";
+		code += "push BP\n";
+		code += "mov BP, SP\n";
+		stackOffset = 0;
 } lp=LPAREN { symbolTable->Enter_scope(); } pl=parameter_list { 
 if($pl.params.size() == $pl.names.size()){
 		for(int i = 0; i < $pl.params.size(); i++){
@@ -163,46 +199,50 @@ if($pl.params.size() == $pl.names.size()){
 		SymbolAdditionalInfo info = SymbolAdditionalInfo();
 		info.dataType = $pl.params[i];
 		symbolTable->Insert($pl.names[i], "ID", info);
+		        code += std::string("mov AX,") + "[BP+" + std::to_string(($pl.params.size() - i) * 2) + "]\n";
+		code += "push AX\n";
+		stackOffset += 2;
+		varOffsetMap[$pl.names[i]] = stackOffset;
 	}
 }
- } rp=RPAREN cm_stmt=compound_statement[true] {
-			writeIntoparserLogFile("Line " + std::to_string($cm_stmt.stop->getLine()) + ":" + " func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement\n");
-			writeIntoparserLogFile($t.text + " " + $id.text + $lp.text + $pl.text + $rp.text + $cm_stmt.text + "\n");
+ } rp=RPAREN {
 		existing = symbolTable->LookUp($id.text);
-		if(existing && existing->additionalInfo.deleted){
-			symbolTable->Remove($id.text);
-		}
-		existing = symbolTable->LookUp($id.text);
-		if (!existing) {
-            SymbolAdditionalInfo info = SymbolAdditionalInfo();
-            info.isFunction = true;
-            info.isDefined = true;
-            info.returnType = $t.text;
-            info.parameters = $pl.params;
-            hasInserted = symbolTable->Insert($id.text, "ID", info);
-			cout<<$id.text << " inserted in symbol table\n";
-        } else {
-			if(existing->additionalInfo.isFunction && !existing->additionalInfo.isDefined) {
-            existing->additionalInfo.isDefined = true;
-			if(existing->additionalInfo.returnType != $t.text) {
-				writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + " Return type mismatch with function declaration in function " + $id.text + "\n");
-				writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + " Return type mismatch with function declaration in function " + $id.text + "\n");
-				syntaxErrorCount++;
-        }
-			if(existing->additionalInfo.parameters != $pl.params) {
-				syntaxErrorCount++;
-				if(existing->additionalInfo.parameters.size() != $pl.params.size()){
-					writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + " Total number of arguments mismatch with declaration in function " + $id.text + "\n");
-					writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + " Total number of arguments mismatch with declaration in function " + $id.text + "\n");
+		if(existing && existing->additionalInfo.isFunction){
+			if(!existing->additionalInfo.isDefined){
+				if(existing->additionalInfo.parameters != $pl.params) {
+					syntaxErrorCount++;
+					if(existing->additionalInfo.parameters.size() != $pl.params.size()){
+						writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + " Total number of arguments mismatch with declaration in function " + $id.text + "\n");
+						writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + " Total number of arguments mismatch with declaration in function " + $id.text + "\n");
+					}
+					}
+				if(existing->additionalInfo.returnType != $t.text) {
+					writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + " Return type mismatch with function declaration in function " + $id.text + "\n");
+					writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + " Return type mismatch with function declaration in function " + $id.text + "\n");
+					syntaxErrorCount++;
 				}
-				}
+				existing->additionalInfo.isDefined = true;
+			}
+			else{
+				existing->additionalInfo.parameters = $pl.params;
 			}
 		}
+ } cm_stmt=compound_statement[true] {
+			writeIntoparserLogFile("Line " + std::to_string($cm_stmt.stop->getLine()) + ":" + " func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement\n");
+			writeIntoparserLogFile($t.text + " " + $id.text + $lp.text + $pl.text + $rp.text + $cm_stmt.text + "\n");
+			code += "mov SP, BP\n";
+			code += "pop BP\n";
+			code += $id.text + " ENDP\n";
 }
 		| t=type_specifier id=ID {
 	existing = symbolTable->LookUp($id.text);
 	if (existing) {
-            if (existing->additionalInfo.isDefined) {
+			if(!existing->additionalInfo.isFunction){
+				writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + " Multiple declaration of " + $id.text + "\n");
+				writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + " Multiple declaration of " + $id.text + "\n");
+				syntaxErrorCount++;
+			}
+			else if(existing->additionalInfo.isDefined) {
 				writeIntoparserLogFile("Line# " + std::to_string($id->getLine()) + " - Error: Function '" + $id.text + "' is already defined.");
                 writeIntoErrorFile("Line# " + std::to_string($id->getLine()) + " - Error: Function '" + $id.text + "' is already defined.");
                 syntaxErrorCount++;
@@ -211,38 +251,38 @@ if($pl.params.size() == $pl.names.size()){
 		else{
 			SymbolAdditionalInfo info = SymbolAdditionalInfo();
 			info.deleted = true;
-			symbolTable->Insert($id.text, "ID",  info);
-		}
-		} lp=LPAREN { symbolTable->Enter_scope(); } rp=RPAREN cm_stmt=compound_statement[true] {
-			writeIntoparserLogFile("Line " + std::to_string($cm_stmt.stop->getLine()) + ":" + " func_definition : type_specifier ID LPAREN RPAREN compound_statement\n");
-			writeIntoparserLogFile($t.text + " " + $id.text + $lp.text + $rp.text + $cm_stmt.text + "\n");
-		existing = symbolTable->LookUp($id.text);
-		if(existing && existing->additionalInfo.deleted){
-			symbolTable->Remove($id.text);
-		}
-		existing = symbolTable->LookUp($id.text);
-		if (!existing) {
-			SymbolAdditionalInfo info = SymbolAdditionalInfo();
 			info.isFunction = true;
 			info.isDefined = true;
 			info.returnType = $t.text;
-			hasInserted = symbolTable->Insert($id.text, "ID", info);
+			symbolTable->Insert($id.text, "ID",  info);
 		}
-		else{
-			if(!existing->additionalInfo.isDefined) {
-			existing->additionalInfo.isDefined = true;
-			if(existing->additionalInfo.returnType != $t.text) {
-				writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + " Return type mismatch with function declaration in function " + $id.text + "\n");
-				writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + " Return type mismatch with function declaration in function " + $id.text + "\n");
-				syntaxErrorCount++;
-		}
-		if(existing->additionalInfo.parameters.size() > 0){
+		code += $id.text + " PROC\n";
+		code += "push BP\n";
+		code += "mov BP, SP\n";
+		stackOffset = 0;
+} lp=LPAREN { symbolTable->Enter_scope(); } rp=RPAREN {
+		existing = symbolTable->LookUp($id.text);
+		if(existing && existing->additionalInfo.isFunction){
+			if(!existing->additionalInfo.isDefined){
+				if(existing->additionalInfo.returnType != $t.text) {
+					writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + " Return type mismatch with function declaration in function " + $id.text + "\n");
+					writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + " Return type mismatch with function declaration in function " + $id.text + "\n");
+					syntaxErrorCount++;
+				}
+				if(existing->additionalInfo.parameters.size() > 0){
 				writeIntoparserLogFile("Error at line " + std::to_string($id->getLine()) + ":" + " Total number of arguments mismatch with declaration in function " + $id.text + "\n");				
 				writeIntoErrorFile("Error at line " + std::to_string($id->getLine()) + ":" + " Total number of arguments mismatch with declaration in function " + $id.text + "\n");
 				syntaxErrorCount++;
+		        }
+				existing->additionalInfo.isDefined = true;
+			}
 		}
-		}
-		}
+} cm_stmt=compound_statement[true] {
+			writeIntoparserLogFile("Line " + std::to_string($cm_stmt.stop->getLine()) + ":" + " func_definition : type_specifier ID LPAREN RPAREN compound_statement\n");
+			writeIntoparserLogFile($t.text + " " + $id.text + $lp.text + $rp.text + $cm_stmt.text + "\n");
+			code += "mov SP, BP\n";
+			code += "pop BP\n";
+			code += $id.text + " ENDP\n";
 	}
  		;				
 
@@ -338,6 +378,32 @@ var_declaration
 					writeIntoparserLogFile("Error at line " + std::to_string($sm->getLine()) + ": Variable type cannot be void\n");
 					writeIntoErrorFile("Error at line " + std::to_string($sm->getLine()) + ": Variable type cannot be void\n");
 					syntaxErrorCount++;
+				}
+			}
+			if(symbolTable->getCurrentScopeId() == "1"){
+				isGlobal = true;
+			}
+			else {
+				isGlobal = false;
+			}
+
+			if(isGlobal) {
+				if($dl.decls[i].second) {
+					datacode += $dl.decls[i].first + " DW " + std::to_string($dl.arrsize[i]) + " DUP(0)\n";
+					globalVariables.push_back($dl.decls[i].first);
+				} else {
+					datacode += $dl.decls[i].first + " DW 0\n";
+					globalVariables.push_back($dl.decls[i].first);
+				}
+			} else {
+				if($dl.decls[i].second) {
+					code += "SUB SP, " + std::to_string($dl.arrsize[i] * 2) + "\n";
+					stackOffset += $dl.arrsize[i] * 2;
+					varOffsetMap[$dl.decls[i].first] = stackOffset;
+				} else {
+					code += "SUB SP, 2\n";
+					stackOffset += 2;
+					varOffsetMap[$dl.decls[i].first] = stackOffset;
 				}
 			}
 		}
@@ -505,7 +571,7 @@ expression_statement 	: SEMICOLON	{
 			}
 			;
 	  
-variable returns [std::string datatype]: ID  {
+variable returns [std::string datatype,std::string place]: ID  {
 	writeIntoparserLogFile("Line " + std::to_string($ID->getLine()) + ":" + " variable : ID\n");
 	writeIntoparserLogFile($ID->getText() + "\n");
 	existing = symbolTable->LookUp($ID->getText());
@@ -523,6 +589,7 @@ variable returns [std::string datatype]: ID  {
 		syntaxErrorCount++;
 		$datatype = "error";
 	}
+	$place = $ID->getText();
 }		
 	 | ID LTHIRD expr=expression RTHIRD {
 	writeIntoparserLogFile("Line " + std::to_string($LTHIRD->getLine()) + ":" + " variable : ID LTHIRD expression RTHIRD\n");
@@ -547,10 +614,11 @@ variable returns [std::string datatype]: ID  {
 		writeIntoErrorFile("Error at line " + std::to_string($expr.start->getLine()) + ": Expression inside third brackets not an integer" + "\n");
 		syntaxErrorCount++;
 	}
+	$place = $ID->getText();
 	 }
 	 ;
 	 
- expression returns [std::string datatype]: lgexpr=logic_expression	{
+ expression returns [std::string datatype,std::string place]: lgexpr=logic_expression	{
 	writeIntoparserLogFile("Line " + std::to_string($lgexpr.start->getLine()) + ":" + " expression : logic_expression\n");
 	writeIntoparserLogFile($lgexpr.text + "\n");
 	$datatype = $lgexpr.datatype;
@@ -572,7 +640,7 @@ variable returns [std::string datatype]: ID  {
 	   }	
 	   ;
 			
-logic_expression returns [std::string datatype]: rlexpr=rel_expression {
+logic_expression returns [std::string datatype,std::string place]: rlexpr=rel_expression {
 	writeIntoparserLogFile("Line " + std::to_string($rlexpr.start->getLine()) + ":" + " logic_expression : rel_expression\n");
 	writeIntoparserLogFile($rlexpr.text + "\n");
 	$datatype = $rlexpr.datatype;
@@ -584,7 +652,7 @@ logic_expression returns [std::string datatype]: rlexpr=rel_expression {
 		 }	
 		 ;
 			
-rel_expression	returns [std::string datatype]: smexpr=simple_expression {
+rel_expression	returns [std::string datatype,std::string place]: smexpr=simple_expression {
 	writeIntoparserLogFile("Line " + std::to_string($smexpr.start->getLine()) + ":" + " rel_expression : simple_expression\n");
 	writeIntoparserLogFile($smexpr.text + "\n");
 	$datatype = $smexpr.datatype;
@@ -596,7 +664,7 @@ rel_expression	returns [std::string datatype]: smexpr=simple_expression {
 		}
 		;
 				
-simple_expression returns [std::string datatype]: trm=term {
+simple_expression returns [std::string datatype,std::string place]: trm=term {
 	writeIntoparserLogFile("Line " + std::to_string($trm.start->getLine()) + ":" + " simple_expression : term\n");
 	writeIntoparserLogFile($trm.text + "\n");
 	$datatype = $trm.datatype;
@@ -622,7 +690,7 @@ simple_expression returns [std::string datatype]: trm=term {
 		  }
 		  ;
 					
-term returns [std::string datatype]:	unexpr=unary_expression {
+term returns [std::string datatype,,std::string place]:	unexpr=unary_expression {
 	writeIntoparserLogFile("Line " + std::to_string($unexpr.start->getLine()) + ":" + " term : unary_expression\n");
 	writeIntoparserLogFile($unexpr.text + "\n");
 	$datatype = $unexpr.datatype;
@@ -660,24 +728,21 @@ term returns [std::string datatype]:	unexpr=unary_expression {
 		syntaxErrorCount++;
 	}
 	 }
-	 |unary_expression HASH {
-		// writeIntoparserLogFile("Error at line " + std::to_string($HASH->getLine()) + ": Unrecognized character #\n");
-		// writeIntoErrorFile("Error at line " + std::to_string($HASH->getLine()) + ": Unrecognized character #\n");
-		writeIntoparserLogFile("Error at line " + std::to_string($HASH->getLine()) + ":" + " syntax error\n");
-		writeIntoErrorFile("Error at line " + std::to_string($HASH->getLine()) + ":" + " syntax error\n");
-		syntaxErrorCount++;
-	}
      ;
 
-unary_expression returns [std::string datatype]: ADDOP unexpr=unary_expression  {
+unary_expression returns [std::string datatype,,std::string place]: ADDOP unexpr=unary_expression  {
 		writeIntoparserLogFile("Line " + std::to_string($ADDOP->getLine()) + ":" + " unary_expression : ADDOP unary_expression\n");
 		writeIntoparserLogFile($ADDOP->getText() + $unexpr.text + "\n");
 		$datatype = $unexpr.datatype;
+		if($ADDOP->getTExt() == "-"){
+			code += "NEG AX\n";
+		}
 }
 		| NOT unexpr=unary_expression {
 		writeIntoparserLogFile("Line " + std::to_string($NOT->getLine()) + ":" + " unary_expression : NOT unary_expression\n");
 		writeIntoparserLogFile($NOT->getText() + $unexpr.text + "\n");
 		$datatype = "int";
+		code += "NOT AX\n";
 		}
 		| fctr=factor {
 		writeIntoparserLogFile("Line " + std::to_string($fctr.start->getLine()) + ":" + " unary_expression : factor\n");
@@ -686,10 +751,12 @@ unary_expression returns [std::string datatype]: ADDOP unexpr=unary_expression  
 		}
 		 ;
 	
-factor returns [std::string datatype]	: var=variable {
+factor returns [std::string datatype,std::string place]	: var=variable {
 		writeIntoparserLogFile("Line " + std::to_string($var.start->getLine()) + ":" + " factor : variable\n");
 		writeIntoparserLogFile($var.text + "\n");
 		$datatype = $var.datatype;
+		$place = $var.place;
+		code += std::string("MOV AX, ") + "[BP-" + std::to_string(varOffsetMap[$var.place]) + "]\n";
     }
 	| id=ID lp=LPAREN argl=argument_list rp=RPAREN {
 		writeIntoparserLogFile("Line " + std::to_string($argl.start->getLine()) + ":" + " factor : ID LPAREN argument_list RPAREN\n");
@@ -731,6 +798,9 @@ factor returns [std::string datatype]	: var=variable {
 		writeIntoparserLogFile("Line " + std::to_string($CONST_INT->getLine()) + ":" + " factor : CONST_INT\n");
 		writeIntoparserLogFile($CONST_INT->getText() + "\n");
 		$datatype = "int";
+		// $place = newTempVariable();
+		code += std::string("MOV AX,") + $CONST_INT->getText() + "\n";
+		// code += "MOV [BP-"  + std::to_string(varOffsetMap[$place]) + "],AX\n";
 	}
 	| CONST_FLOAT {
 		writeIntoparserLogFile("Line " + std::to_string($CONST_FLOAT->getLine()) + ":" + " factor : CONST_FLOAT\n");
@@ -741,11 +811,19 @@ factor returns [std::string datatype]	: var=variable {
 		writeIntoparserLogFile("Line " + std::to_string($INCOP->getLine()) + ":" + " factor : variable INCOP\n");
 		writeIntoparserLogFile($INCOP->getText() + "\n");
 		$datatype = $var.datatype;
+		code += std::string("MOV AX, ") + "[BP-" + std::to_string(varOffsetMap[$var.place]) + "]\n";
+		code += "MOV BX, AX\n";
+		code += "ADD BX, 1\n";
+		code += std::string("MOV [BP-") + std::to_string(varOffsetMap[$var.place]) + "], BX\n";
 	}
 	| var=variable DECOP {
 		writeIntoparserLogFile("Line " + std::to_string($DECOP->getLine()) + ":" + " factor : variable DECOP\n");
 		writeIntoparserLogFile($DECOP->getText() + "\n");
 		$datatype = $var.datatype;
+		code += std::string("MOV AX, ") + "[BP-" + std::to_string(varOffsetMap[$var.place]) + "]\n";
+		code += "MOV BX, AX\n";
+		code += "SUB BX, 1\n";
+		code += std::string("MOV [BP-") + std::to_string(varOffsetMap[$var.place]) + "], BX\n";
 	}
 	;
 	

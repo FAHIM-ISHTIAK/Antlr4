@@ -20,6 +20,8 @@ class SymbolAdditionalInfo{
     bool isArray = false;   // Flag to indicate if the symbol is an array
     int arraySize = 0; // Size of the array if it is an array 
     bool deleted = false;
+    int offset = 0; // Offset of the symbol in the stack or data segment
+    bool isGlobal = false; // Flag to indicate if the symbol is global
 
     SymbolAdditionalInfo(){
         // Default constructor
