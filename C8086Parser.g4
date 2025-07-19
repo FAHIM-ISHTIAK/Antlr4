@@ -42,6 +42,7 @@ options {
 	stack<string> labelStack;
 	bool iscodewritten = false;
 	bool hasreturn = false;
+	string functionName = "";
 
 	std::string newLabel() {
 		return "L" + std::to_string(labelCount++);
@@ -86,57 +87,61 @@ start : {
 	{
 		symbolTable->PrintAllScopeTable();
 		delete symbolTable;
-		str = "new_line proc\n"
-		"    push ax\n"
-		"    push dx\n"
-		"    mov ah,2\n"
-		"    mov dl,0Dh\n"
-		"    int 21h\n"
-		"    mov ah,2\n"
-		"    mov dl,0Ah\n"
-		"    int 21h\n"
-		"    pop dx\n"
-		"    pop ax\n"
-		"    ret\n"
-		"    new_line endp\n"
-		"print_output proc  ;print what is in ax\n"
-		"    push ax\n"
-		"    push bx\n"
-		"    push cx\n"
-		"    push dx\n"
-		"    push si\n"
-		"    lea si,number\n"
-		"    mov bx,10\n"
-		"    add si,4\n"
-		"    cmp ax,0\n"
-		"    jnge negate\n"
-		"print:\n"
-		"    xor dx,dx\n"
-		"    div bx\n"
-		"    mov [si],dl\n"
-		"    add [si],'0'\n"
-		"    dec si\n"
-		"    cmp ax,0\n"
-		"    jne print\n"
-		"    inc si\n"
-		"    lea dx,si\n"
-		"    mov ah,9\n"
-		"    int 21h\n"
-		"    pop si\n"
-		"    pop dx\n"
-		"    pop cx\n"
-		"    pop bx\n"
-		"    pop ax\n"
-		"    ret\n"
-		"negate:\n"
-		"    push ax\n"
-		"    mov ah,2\n"
-		"    mov dl,'-'\n"
-		"    int 21h\n"
-		"    pop ax\n"
-		"    neg ax\n"
-		"    jmp print\n"
-		"print_output endp\n";
+		str = "print_output PROC\n"
+		"    PUSH AX\n"
+		"    PUSH BX\n"
+		"    PUSH CX\n"
+		"    PUSH DX\n"
+		"    PUSH SI\n"
+		"\n"
+		"    ; Check if AX is negative\n"
+		"    TEST AX, 8000h      ; Check sign bit\n"
+		"    JZ CONTINUE_PRINT   ; If not negative, skip \n"
+		"\n"
+		"    MOV BX,AX\n"
+		"    ; Print '-' sign\n"
+		"    MOV AH, 02H\n"
+		"    MOV DL, '-'\n"
+		"    INT 21H\n"
+		"\n"
+		"    NEG BX              ; Make AX positive\n"
+		"    MOV AX,BX\n"
+		"\n"
+		"CONTINUE_PRINT:\n"
+		"    XOR DX, DX\n"
+		"    MOV BX, 10\n"
+		"    MOV CX, 0\n"
+		"\n"
+		"EXTRACT_DIGIT:\n"
+		"    DIV BX              ; AX / 10, quotient in AX, remainder in DX\n"
+		"    PUSH DX             ; Store remainder (digit)\n"
+		"    XOR DX, DX\n"
+		"    INC CX              ; Count digits\n"
+		"    CMP AX, 0\n"
+		"    JNE EXTRACT_DIGIT\n"
+		"\n"
+		"PRINT_DIGIT:\n"
+		"    POP DX\n"
+		"    ADD DL, '0'\n"
+		"    MOV AH, 02H\n"
+		"    INT 21H\n"
+		"    LOOP PRINT_DIGIT\n"
+		"\n"
+		"    ; New line\n"
+		"    MOV DL, 0DH\n"
+		"    MOV AH, 02H\n"
+		"    INT 21H\n"
+		"    MOV DL, 0AH\n"
+		"    MOV AH, 02H\n"
+		"    INT 21H\n"
+		"\n"
+		"    POP SI\n"
+		"    POP DX\n"
+		"    POP CX\n"
+		"    POP BX\n"
+		"    POP AX\n"
+		"    RET\n"
+		"print_output ENDP\n";
 		writeIntoAssemblyFile(str);
 	}
 	;
@@ -238,6 +243,7 @@ func_definition : t=type_specifier id=ID {
 			info.returnType = $t.text;
 			symbolTable->Insert($id.text, "ID",  info);
 		}
+		functionName = $id.text;
 		code = $id.text + " PROC\n";
 		code += "push BP\n";
 		code += "mov BP, SP\n";
@@ -283,14 +289,14 @@ if($pl.params.size() == $pl.names.size()){
  } cm_stmt=compound_statement[true] {
 			writeIntoparserLogFile("Line " + std::to_string($cm_stmt.stop->getLine()) + ":" + " func_definition : type_specifier ID LPAREN parameter_list RPAREN compound_statement\n");
 			writeIntoparserLogFile($t.text + " " + $id.text + $lp.text + $pl.text + $rp.text + $cm_stmt.text + "\n");
-			code = "MOV SP, BP\n";
-			code += "POP BP\n";
-			if($id.text == "main"){
-				code += "MOV AX, 4CH\n";
-				code += "INT 21h\n";
+			code ="";
+			if(!hasreturn){
+				code += "MOV SP, BP\n";
+			    code += "POP BP\n";
+				code += "RET\n";
 			}
 			else{
-				code += "RET\n";
+				hasreturn = false;
 			}
 			code += $id.text + " ENDP\n";
             writeIntoAssemblyFile(code);
@@ -317,6 +323,7 @@ if($pl.params.size() == $pl.names.size()){
 			info.returnType = $t.text;
 			symbolTable->Insert($id.text, "ID",  info);
 		}
+		functionName = $id.text;
         code = $id.text + " PROC\n";
 		code += "push BP\n";
 		code += "mov BP, SP\n";
@@ -342,14 +349,14 @@ if($pl.params.size() == $pl.names.size()){
 } cm_stmt=compound_statement[true] {
 			writeIntoparserLogFile("Line " + std::to_string($cm_stmt.stop->getLine()) + ":" + " func_definition : type_specifier ID LPAREN RPAREN compound_statement\n");
 			writeIntoparserLogFile($t.text + " " + $id.text + $lp.text + $rp.text + $cm_stmt.text + "\n");
-            code = "MOV SP, BP\n";
-			code += "POP BP\n";
-			if($id.text == "main"){
-				code += "MOV AX, 4CH\n";
-				code += "INT 21h\n";
+			code ="";
+			if(!hasreturn){
+				code += "MOV SP, BP\n";
+			    code += "POP BP\n";
+				code += "RET\n";
 			}
 			else{
-				code += "RET\n";
+				hasreturn = false;
 			}
 			code += $id.text + " ENDP\n";
             writeIntoAssemblyFile(code);
@@ -676,6 +683,13 @@ statement : var_dec=var_declaration {
 	writeIntoparserLogFile("Line " + std::to_string($rtn->getLine()) + ":" + " statement : RETURN expression SEMICOLON\n");
 	writeIntoparserLogFile($rtn.text + " " + $expr.text + $sm.text + "\n\n");
 	code = "POP CX\n";
+	code += "MOV SP, BP\n";
+	code += "POP BP\n";
+	if(functionName == "main") {
+		code += "MOV AX, 4CH\n";
+		code += "INT 21h\n";
+	}
+	code += "RET\n";
 	writeIntoAssemblyFile(code);
 	hasreturn = true;
 	  }
