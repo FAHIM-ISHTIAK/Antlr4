@@ -74,7 +74,7 @@ options {
 			return;
 		}
 
-		assemblyFile << message << std::endl;
+		assemblyFile << message ;
 		assemblyFile.flush();
 	}
 }
@@ -245,7 +245,7 @@ func_definition : t=type_specifier id=ID {
 		}
 		functionName = $id.text;
 		code = $id.text + " PROC\n";
-		code += "push BP\n";
+		code += "PUSH BP\n";
 		code += "mov BP, SP\n";
 		stackOffset = 0;
         writeIntoAssemblyFile(code);
@@ -325,7 +325,7 @@ if($pl.params.size() == $pl.names.size()){
 		}
 		functionName = $id.text;
         code = $id.text + " PROC\n";
-		code += "push BP\n";
+		code += "PUSH BP\n";
 		code += "mov BP, SP\n";
 		stackOffset = 0;
         writeIntoAssemblyFile(code);

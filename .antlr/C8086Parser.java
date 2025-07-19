@@ -178,7 +178,7 @@ public class C8086Parser extends Parser {
 				return;
 			}
 
-			assemblyFile << message << std::endl;
+			assemblyFile << message ;
 			assemblyFile.flush();
 		}
 
@@ -630,7 +630,7 @@ public class C8086Parser extends Parser {
 						}
 						functionName = (((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null);
 						code = (((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null) + " PROC\n";
-						code += "push BP\n";
+						code += "PUSH BP\n";
 						code += "mov BP, SP\n";
 						stackOffset = 0;
 				        writeIntoAssemblyFile(code);
@@ -731,7 +731,7 @@ public class C8086Parser extends Parser {
 						}
 						functionName = (((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null);
 				        code = (((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null) + " PROC\n";
-						code += "push BP\n";
+						code += "PUSH BP\n";
 						code += "mov BP, SP\n";
 						stackOffset = 0;
 				        writeIntoAssemblyFile(code);
