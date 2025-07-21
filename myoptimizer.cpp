@@ -145,6 +145,7 @@ vector<string> optimizeCode(vector<string>& lines) {
         // Check for redundant MOV
         if (i + 1 < lines.size() && isRedundantMOV(line, lines[i+1])) {
             i++; // skip the next line
+            optimized.push_back(line); // keep the current line
             continue;
         }
 
@@ -159,59 +160,8 @@ vector<string> optimizeCode(vector<string>& lines) {
             continue;
         }
 
-        // // Handle labels
-        // if (isLabel(line)) {
-        //     string label = extractLabel(line);
-        //     if (usedLabels.find(label) != usedLabels.end()) {
-        //         optimized.push_back(line);
-        //         // Track label definitions
-        //         if (!labelPairs.empty() && labelPairs.back().second.empty()) {
-        //             labelPairs.back().second = label;
-        //         }
-        //     } else {
-        //         // This label is unused, but we might need it for consecutive label elimination
-        //         if (!labelPairs.empty() && labelPairs.back().second.empty()) {
-        //             labelPairs.back().second = label;
-        //         } else {
-        //             labelPairs.emplace_back(label, "");
-        //         }
-        //     }
-        //     continue;
-        // }
-
         optimized.push_back(line);
     }
-
-    // // Third pass: identify consecutive labels for elimination
-    // for (size_t i = 0; i < labelPairs.size(); i++) {
-    //     if (i + 1 < labelPairs.size() && labelPairs[i].second == labelPairs[i+1].first) {
-    //         labelMap[labelPairs[i].first] = labelPairs[i+1].first;
-    //     }
-    // }
-
-    // // Fourth pass: replace all label references throughout the entire code
-    // for (auto& mapping : labelMap) {
-    //     for (string& line : optimized) {
-    //         if (!isLabel(line)) { // Don't replace in label definitions
-    //             line = replaceLabelInLine(line, mapping.first, mapping.second);
-    //         }
-    //     }
-    // }
-
-    // // Fifth pass: remove labels that were mapped to other labels
-    // vector<string> finalOptimized;
-    // for (const string& line : optimized) {
-    //     if (isLabel(line)) {
-    //         string label = extractLabel(line);
-    //         if (labelMap.find(label) == labelMap.end()) {
-    //             finalOptimized.push_back(line);
-    //         }
-    //     } else {
-    //         finalOptimized.push_back(line);
-    //     }
-    // }
-
-    // return finalOptimized;
 
     int i = 0;
     while(i < optimized.size()){
