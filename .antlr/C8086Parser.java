@@ -625,7 +625,7 @@ public class C8086Parser extends Parser {
 							symbolTable->Insert((((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null), "ID",  info);
 						}
 						functionName = (((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null);
-						code = (((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null) + " PROC\n";
+						code = (((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null) + " PROC" + "\t\t;line  " + std::to_string(((Func_definitionContext)_localctx).id->getLine()) + "\n";
 						code += "PUSH BP\n";
 						code += "mov BP, SP\n";
 						stackOffset = 0;
@@ -716,7 +716,7 @@ public class C8086Parser extends Parser {
 							symbolTable->Insert((((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null), "ID",  info);
 						}
 						functionName = (((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null);
-				        code = (((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null) + " PROC\n";
+				        code = (((Func_definitionContext)_localctx).id!=null?((Func_definitionContext)_localctx).id.getText():null) + " PROC" + "\t\t;line  " + std::to_string(((Func_definitionContext)_localctx).id->getLine()) + "\n";
 						code += "PUSH BP\n";
 						code += "mov BP, SP\n";
 						stackOffset = 0;
@@ -1031,22 +1031,22 @@ public class C8086Parser extends Parser {
 
 							if(info.isGlobal){
 								if(((Var_declarationContext)_localctx).dl.decls[i].second){
-									datacode = ((Var_declarationContext)_localctx).dl.decls[i].first + " DW " + std::to_string(((Var_declarationContext)_localctx).dl.arrsize[i]) + " DUP(0)\n";
+									datacode = std::string(((Var_declarationContext)_localctx).dl.decls[i].first) + " DW " + std::to_string(((Var_declarationContext)_localctx).dl.arrsize[i]) + " DUP(0)" + "\t\t;line  " + std::to_string(((Var_declarationContext)_localctx).sm->getLine()) + "\n";
 								}
 								else{
-									datacode = ((Var_declarationContext)_localctx).dl.decls[i].first + " DW 0\n";
+									datacode = std::string(((Var_declarationContext)_localctx).dl.decls[i].first) + " DW 0" + "\t\t;line  " + std::to_string(((Var_declarationContext)_localctx).sm->getLine()) + "\n";
 								}
 								writeIntoAssemblyFile(datacode);
 							}
 							else{
 								if(((Var_declarationContext)_localctx).dl.decls[i].second){
-									code = "SUB SP, " + std::to_string(((Var_declarationContext)_localctx).dl.arrsize[i] * 2) + "\n";
+									code = "SUB SP, " + std::to_string(((Var_declarationContext)_localctx).dl.arrsize[i] * 2) + "\t\t;line  " + std::to_string(((Var_declarationContext)_localctx).sm->getLine()) + "\n";
 									stackOffset += ((Var_declarationContext)_localctx).dl.arrsize[i] * 2;
 									info.offset = stackOffset;
 				                    writeIntoAssemblyFile(code);
 								}
 								else{
-									code = "SUB SP, 2\n";
+									code = std::string("SUB SP, 2") + "\t\t;line  " + std::to_string(((Var_declarationContext)_localctx).sm->getLine()) + "\n";
 									stackOffset += 2;
 									info.offset = stackOffset;
 				                    writeIntoAssemblyFile(code);
@@ -1689,7 +1689,7 @@ public class C8086Parser extends Parser {
 						code += "MOV AX, 4CH\n";
 						code += "INT 21h\n";
 					}
-					code += "RET\n";
+					code += std::string("RET") + "\t\t;line  " + std::to_string(((StatementContext)_localctx).rtn->getLine()) + "\n";
 					writeIntoAssemblyFile(code);
 					hasreturn = true;
 					  
@@ -2282,11 +2282,11 @@ public class C8086Parser extends Parser {
 					          	    code = "POP BX\n";
 					          		code += "POP AX\n";
 					          		if(((Simple_expressionContext)_localctx).ADDOP->getText() == "+"){
-					          			code += "ADD AX, BX\n";
+					          			code += std::string("ADD AX, BX") + "\t\t;line  " + std::to_string(((Simple_expressionContext)_localctx).ADDOP->getLine()) + "\n";
 					          			code += "PUSH AX\n";
 					          		}
 					          		else if(((Simple_expressionContext)_localctx).ADDOP->getText() == "-"){
-					          			code += "SUB AX, BX\n";
+					          			code += std::string("SUB AX, BX") + "\t\t;line  " + std::to_string(((Simple_expressionContext)_localctx).ADDOP->getLine()) + "\n";
 					          			code += "PUSH AX\n"; // difference in AX
 					          		}
 					          		writeIntoAssemblyFile(code);
@@ -2384,17 +2384,21 @@ public class C8086Parser extends Parser {
 					          		code = "POP BX\n";
 					          		code += "POP AX\n";
 					          		if(((TermContext)_localctx).MULOP->getText() == "*"){
-					          			code += "MUL BX\n";
+					          			code += std::string("MUL BX") + "\t\t;line  " + std::to_string(((TermContext)_localctx).MULOP->getLine()) + "\n";
 					          			code += "PUSH AX\n";
 					          		}
 					          		else if(((TermContext)_localctx).MULOP->getText() == "/"){
+					          			// code += "CWD\n"; // convert word to double word
+					          			// code += "IDIV BX\n"; // divide AX by BX
 					          			code += "XOR DX, DX\n";
-					          			code += "DIV BX\n";
+					          			code += std::string("DIV BX") + "\t\t;line  " + std::to_string(((TermContext)_localctx).MULOP->getLine()) + "\n";
 					          			code += "PUSH AX\n"; // quotient in AX
 					          		}
 					          		else if(((TermContext)_localctx).MULOP->getText() == "%"){
+					          			// code += "CWD\n"; // convert word to double word
+					          			// code += "IDIV BX\n"; // divide AX by BX
 					          			code += "XOR DX, DX\n";
-					          			code += "DIV BX\n";
+					          			code += std::string("DIV BX") + "\t\t;line  " + std::to_string(((TermContext)_localctx).MULOP->getLine()) + "\n";
 					          			code += "PUSH DX\n"; // remainder in DX
 					          		}
 					          		writeIntoAssemblyFile(code);
@@ -2519,6 +2523,8 @@ public class C8086Parser extends Parser {
 		public Token rp;
 		public ExpressionContext expr;
 		public Token CONST_INT;
+		public Token INCOP;
+		public Token DECOP;
 		public VariableContext variable() {
 			return getRuleContext(VariableContext.class,0);
 		}
@@ -2581,7 +2587,7 @@ public class C8086Parser extends Parser {
 
 						((FactorContext)_localctx).datatype =  existing->additionalInfo.returnType;
 						existing = symbolTable->LookUp((((FactorContext)_localctx).id!=null?((FactorContext)_localctx).id.getText():null));
-						code = "CALL " + (((FactorContext)_localctx).id!=null?((FactorContext)_localctx).id.getText():null) + "\n";
+						code = "CALL " + (((FactorContext)_localctx).id!=null?((FactorContext)_localctx).id.getText():null) + "\t\t;line  " + std::to_string(((FactorContext)_localctx).id->getLine()) + "\n";
 						for(int i = 0; i< ((FactorContext)_localctx).argl.argtypes.size(); i++) {
 							code += "POP DX\n";
 						}
@@ -2611,7 +2617,7 @@ public class C8086Parser extends Parser {
 				((FactorContext)_localctx).CONST_INT = match(CONST_INT);
 
 						((FactorContext)_localctx).datatype =  "int";
-						code = "MOV AX, " + ((FactorContext)_localctx).CONST_INT->getText() + "\n";
+						code = "MOV AX, " + ((FactorContext)_localctx).CONST_INT->getText() + "\t\t;line  " + std::to_string(((FactorContext)_localctx).CONST_INT->getLine()) + "\n";
 						code += "PUSH AX\n";
 						writeIntoAssemblyFile(code);
 					
@@ -2633,18 +2639,18 @@ public class C8086Parser extends Parser {
 				setState(372);
 				((FactorContext)_localctx).var = variable();
 				setState(373);
-				match(INCOP);
+				((FactorContext)_localctx).INCOP = match(INCOP);
 
 						((FactorContext)_localctx).datatype =  ((FactorContext)_localctx).var.datatype;
 						existing = symbolTable->LookUp(((FactorContext)_localctx).var.place);
 						if(existing){
 							if(existing->additionalInfo.isArray){
 								if(existing->additionalInfo.isGlobal){
-									code = "LEA SI, " + (((FactorContext)_localctx).var!=null?_input.getText(((FactorContext)_localctx).var.start,((FactorContext)_localctx).var.stop):null) + "\n";
+									code = "LEA SI, " + ((FactorContext)_localctx).var.place + "\n";
 									code += "POP AX\n";
 									code += "POP BX\n";
 									code += "ADD SI, BX\n";
-									code += "INC WORD PTR[SI]\n";
+									code += std::string("INC WORD PTR[SI]") + "\t\t;line  " + std::to_string(((FactorContext)_localctx).INCOP->getLine()) + "\n";
 									code += "PUSH AX\n";
 									writeIntoAssemblyFile(code);
 								}
@@ -2653,7 +2659,7 @@ public class C8086Parser extends Parser {
 									code += "POP BX\n";
 									code += "PUSH BP\n";
 									code += "SUB BP, BX\n";
-									code += "INC WORD PTR[BP]\n";
+									code += std::string("INC WORD PTR[BP]") + "\t\t;line  " + std::to_string(((FactorContext)_localctx).INCOP->getLine()) + "\n";
 									code += "POP BP\n";
 									code += "PUSH AX\n";
 									writeIntoAssemblyFile(code);
@@ -2661,11 +2667,11 @@ public class C8086Parser extends Parser {
 							}
 							else{
 								if(existing->additionalInfo.isGlobal){
-									code = "INC " + (((FactorContext)_localctx).var!=null?_input.getText(((FactorContext)_localctx).var.start,((FactorContext)_localctx).var.stop):null) + "\n";
+									code = "INC " + ((FactorContext)_localctx).var.place + "\t\t;line  " + std::to_string(((FactorContext)_localctx).INCOP->getLine()) + "\n";
 									writeIntoAssemblyFile(code);
 								}
 								else{
-									code = "INC WORD PTR[BP - " + std::to_string(existing->additionalInfo.offset) + "]\n";
+									code = "INC WORD PTR[BP - " + std::to_string(existing->additionalInfo.offset) + "]" + "\t\t;line  " + std::to_string(((FactorContext)_localctx).INCOP->getLine()) + "\n";
 									writeIntoAssemblyFile(code);
 								}
 							}
@@ -2679,18 +2685,18 @@ public class C8086Parser extends Parser {
 				setState(376);
 				((FactorContext)_localctx).var = variable();
 				setState(377);
-				match(DECOP);
+				((FactorContext)_localctx).DECOP = match(DECOP);
 
 						((FactorContext)_localctx).datatype =  ((FactorContext)_localctx).var.datatype;
 						existing = symbolTable->LookUp((((FactorContext)_localctx).var!=null?_input.getText(((FactorContext)_localctx).var.start,((FactorContext)_localctx).var.stop):null));
 						if(existing){
 							if(existing->additionalInfo.isArray){
 								if(existing->additionalInfo.isGlobal){
-									code = "LEA SI, " + (((FactorContext)_localctx).var!=null?_input.getText(((FactorContext)_localctx).var.start,((FactorContext)_localctx).var.stop):null) + "\n";
+									code = "LEA SI, " + ((FactorContext)_localctx).var.place + "\n";
 									code += "POP AX\n";
 									code += "POP BX\n";
 									code += "ADD SI, BX\n";
-									code += "DEC WORD PTR[SI]\n";
+									code += std::string("DEC WORD PTR[SI]") + "\t\t;line  " + std::to_string(((FactorContext)_localctx).DECOP->getLine()) + "\n";
 									code += "PUSH AX\n";
 									writeIntoAssemblyFile(code);
 								}
@@ -2699,7 +2705,7 @@ public class C8086Parser extends Parser {
 									code += "POP BX\n";
 									code += "PUSH BP\n";
 									code += "SUB BP, BX\n";
-									code += "DEC WORD PTR[BP]\n";
+									code += std::string("DEC WORD PTR[BP]") + "\t\t;line  " + std::to_string(((FactorContext)_localctx).DECOP->getLine()) + "\n";
 									code += "POP BP\n";
 									code += "PUSH AX\n";
 									writeIntoAssemblyFile(code);
@@ -2707,11 +2713,11 @@ public class C8086Parser extends Parser {
 							}
 							else{
 								if(existing->additionalInfo.isGlobal){
-									code = "DEC " + (((FactorContext)_localctx).var!=null?_input.getText(((FactorContext)_localctx).var.start,((FactorContext)_localctx).var.stop):null) + "\n";
+									code = "DEC " + ((FactorContext)_localctx).var.place + "\t\t;line  " + std::to_string(((FactorContext)_localctx).DECOP->getLine()) + "\n";
 									writeIntoAssemblyFile(code);
 								}
 								else{
-									code = "DEC WORD PTR[BP - " + std::to_string(existing->additionalInfo.offset) + "]\n";
+									code = "DEC WORD PTR[BP - " + std::to_string(existing->additionalInfo.offset) + "]" + "\t\t;line  " + std::to_string(((FactorContext)_localctx).DECOP->getLine()) + "\n";
 									writeIntoAssemblyFile(code);
 								}
 							}

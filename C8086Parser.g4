@@ -245,7 +245,7 @@ func_definition : t=type_specifier id=ID {
 			symbolTable->Insert($id.text, "ID",  info);
 		}
 		functionName = $id.text;
-		code = $id.text + " PROC\n";
+		code = $id.text + " PROC" + "\t\t;line  " + std::to_string($id->getLine()) + "\n";
 		code += "PUSH BP\n";
 		code += "mov BP, SP\n";
 		stackOffset = 0;
@@ -315,7 +315,7 @@ if($pl.params.size() == $pl.names.size()){
 			symbolTable->Insert($id.text, "ID",  info);
 		}
 		functionName = $id.text;
-        code = $id.text + " PROC\n";
+        code = $id.text + " PROC" + "\t\t;line  " + std::to_string($id->getLine()) + "\n";
 		code += "PUSH BP\n";
 		code += "mov BP, SP\n";
 		stackOffset = 0;
@@ -403,22 +403,22 @@ var_declaration
 
 			if(info.isGlobal){
 				if($dl.decls[i].second){
-					datacode = $dl.decls[i].first + " DW " + std::to_string($dl.arrsize[i]) + " DUP(0)\n";
+					datacode = std::string($dl.decls[i].first) + " DW " + std::to_string($dl.arrsize[i]) + " DUP(0)" + "\t\t;line  " + std::to_string($sm->getLine()) + "\n";
 				}
 				else{
-					datacode = $dl.decls[i].first + " DW 0\n";
+					datacode = std::string($dl.decls[i].first) + " DW 0" + "\t\t;line  " + std::to_string($sm->getLine()) + "\n";
 				}
 				writeIntoAssemblyFile(datacode);
 			}
 			else{
 				if($dl.decls[i].second){
-					code = "SUB SP, " + std::to_string($dl.arrsize[i] * 2) + "\n";
+					code = "SUB SP, " + std::to_string($dl.arrsize[i] * 2) + "\t\t;line  " + std::to_string($sm->getLine()) + "\n";
 					stackOffset += $dl.arrsize[i] * 2;
 					info.offset = stackOffset;
                     writeIntoAssemblyFile(code);
 				}
 				else{
-					code = "SUB SP, 2\n";
+					code = std::string("SUB SP, 2") + "\t\t;line  " + std::to_string($sm->getLine()) + "\n";
 					stackOffset += 2;
 					info.offset = stackOffset;
                     writeIntoAssemblyFile(code);
@@ -585,7 +585,7 @@ statement : var_dec=var_declaration
 		code += "MOV AX, 4CH\n";
 		code += "INT 21h\n";
 	}
-	code += "RET\n";
+	code += std::string("RET") + "\t\t;line  " + std::to_string($rtn->getLine()) + "\n";
 	writeIntoAssemblyFile(code);
 	hasreturn = true;
 	  }
@@ -832,11 +832,11 @@ simple_expression returns [std::string datatype]: trm=term {
 	    code = "POP BX\n";
 		code += "POP AX\n";
 		if($ADDOP->getText() == "+"){
-			code += "ADD AX, BX\n";
+			code += std::string("ADD AX, BX") + "\t\t;line  " + std::to_string($ADDOP->getLine()) + "\n";
 			code += "PUSH AX\n";
 		}
 		else if($ADDOP->getText() == "-"){
-			code += "SUB AX, BX\n";
+			code += std::string("SUB AX, BX") + "\t\t;line  " + std::to_string($ADDOP->getLine()) + "\n";
 			code += "PUSH AX\n"; // difference in AX
 		}
 		writeIntoAssemblyFile(code);
@@ -859,17 +859,21 @@ term returns [std::string datatype]:	unexpr=unary_expression {
 		code = "POP BX\n";
 		code += "POP AX\n";
 		if($MULOP->getText() == "*"){
-			code += "MUL BX\n";
+			code += std::string("MUL BX") + "\t\t;line  " + std::to_string($MULOP->getLine()) + "\n";
 			code += "PUSH AX\n";
 		}
 		else if($MULOP->getText() == "/"){
+			// code += "CWD\n"; // convert word to double word
+			// code += "IDIV BX\n"; // divide AX by BX
 			code += "XOR DX, DX\n";
-			code += "DIV BX\n";
+			code += std::string("DIV BX") + "\t\t;line  " + std::to_string($MULOP->getLine()) + "\n";
 			code += "PUSH AX\n"; // quotient in AX
 		}
 		else if($MULOP->getText() == "%"){
+			// code += "CWD\n"; // convert word to double word
+			// code += "IDIV BX\n"; // divide AX by BX
 			code += "XOR DX, DX\n";
-			code += "DIV BX\n";
+			code += std::string("DIV BX") + "\t\t;line  " + std::to_string($MULOP->getLine()) + "\n";
 			code += "PUSH DX\n"; // remainder in DX
 		}
 		writeIntoAssemblyFile(code);
@@ -913,7 +917,7 @@ factor returns [std::string datatype]	: var=variable {
 	| id=ID lp=LPAREN argl=argument_list rp=RPAREN {
 		$datatype = existing->additionalInfo.returnType;
 		existing = symbolTable->LookUp($id.text);
-		code = "CALL " + $id.text + "\n";
+		code = "CALL " + $id.text + "\t\t;line  " + std::to_string($id->getLine()) + "\n";
 		for(int i = 0; i< $argl.argtypes.size(); i++) {
 			code += "POP DX\n";
 		}
@@ -925,7 +929,7 @@ factor returns [std::string datatype]	: var=variable {
 	}
 	| CONST_INT {
 		$datatype = "int";
-		code = "MOV AX, " + $CONST_INT->getText() + "\n";
+		code = "MOV AX, " + $CONST_INT->getText() + "\t\t;line  " + std::to_string($CONST_INT->getLine()) + "\n";
 		code += "PUSH AX\n";
 		writeIntoAssemblyFile(code);
 	}
@@ -938,11 +942,11 @@ factor returns [std::string datatype]	: var=variable {
 		if(existing){
 			if(existing->additionalInfo.isArray){
 				if(existing->additionalInfo.isGlobal){
-					code = "LEA SI, " + $var.text + "\n";
+					code = "LEA SI, " + $var.place + "\n";
 					code += "POP AX\n";
 					code += "POP BX\n";
 					code += "ADD SI, BX\n";
-					code += "INC WORD PTR[SI]\n";
+					code += std::string("INC WORD PTR[SI]") + "\t\t;line  " + std::to_string($INCOP->getLine()) + "\n";
 					code += "PUSH AX\n";
 					writeIntoAssemblyFile(code);
 				}
@@ -951,7 +955,7 @@ factor returns [std::string datatype]	: var=variable {
 					code += "POP BX\n";
 					code += "PUSH BP\n";
 					code += "SUB BP, BX\n";
-					code += "INC WORD PTR[BP]\n";
+					code += std::string("INC WORD PTR[BP]") + "\t\t;line  " + std::to_string($INCOP->getLine()) + "\n";
 					code += "POP BP\n";
 					code += "PUSH AX\n";
 					writeIntoAssemblyFile(code);
@@ -959,11 +963,11 @@ factor returns [std::string datatype]	: var=variable {
 			}
 			else{
 				if(existing->additionalInfo.isGlobal){
-					code = "INC " + $var.text + "\n";
+					code = "INC " + $var.place + "\t\t;line  " + std::to_string($INCOP->getLine()) + "\n";
 					writeIntoAssemblyFile(code);
 				}
 				else{
-					code = "INC WORD PTR[BP - " + std::to_string(existing->additionalInfo.offset) + "]\n";
+					code = "INC WORD PTR[BP - " + std::to_string(existing->additionalInfo.offset) + "]" + "\t\t;line  " + std::to_string($INCOP->getLine()) + "\n";
 					writeIntoAssemblyFile(code);
 				}
 			}
@@ -975,11 +979,11 @@ factor returns [std::string datatype]	: var=variable {
 		if(existing){
 			if(existing->additionalInfo.isArray){
 				if(existing->additionalInfo.isGlobal){
-					code = "LEA SI, " + $var.text + "\n";
+					code = "LEA SI, " + $var.place + "\n";
 					code += "POP AX\n";
 					code += "POP BX\n";
 					code += "ADD SI, BX\n";
-					code += "DEC WORD PTR[SI]\n";
+					code += std::string("DEC WORD PTR[SI]") + "\t\t;line  " + std::to_string($DECOP->getLine()) + "\n";
 					code += "PUSH AX\n";
 					writeIntoAssemblyFile(code);
 				}
@@ -988,7 +992,7 @@ factor returns [std::string datatype]	: var=variable {
 					code += "POP BX\n";
 					code += "PUSH BP\n";
 					code += "SUB BP, BX\n";
-					code += "DEC WORD PTR[BP]\n";
+					code += std::string("DEC WORD PTR[BP]") + "\t\t;line  " + std::to_string($DECOP->getLine()) + "\n";
 					code += "POP BP\n";
 					code += "PUSH AX\n";
 					writeIntoAssemblyFile(code);
@@ -996,11 +1000,11 @@ factor returns [std::string datatype]	: var=variable {
 			}
 			else{
 				if(existing->additionalInfo.isGlobal){
-					code = "DEC " + $var.text + "\n";
+					code = "DEC " + $var.place + "\t\t;line  " + std::to_string($DECOP->getLine()) + "\n";
 					writeIntoAssemblyFile(code);
 				}
 				else{
-					code = "DEC WORD PTR[BP - " + std::to_string(existing->additionalInfo.offset) + "]\n";
+					code = "DEC WORD PTR[BP - " + std::to_string(existing->additionalInfo.offset) + "]" + "\t\t;line  " + std::to_string($DECOP->getLine()) + "\n";
 					writeIntoAssemblyFile(code);
 				}
 			}

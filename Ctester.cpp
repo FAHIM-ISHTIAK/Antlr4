@@ -32,7 +32,7 @@ int main(int argc, const char* argv[]) {
     string parserLogFileName = outputDirectory + "parserLog.txt";
     string errorFileName = outputDirectory + "errorLog.txt";
     string lexLogFileName = outputDirectory + "lexerLog.txt";
-    string assemblyFileName = outputDirectory + "assemblyOutput.asm";
+    string assemblyFileName = outputDirectory + "code.asm";
 
     // create output directory if it doesn't exist
     system(("mkdir -p " + outputDirectory).c_str());

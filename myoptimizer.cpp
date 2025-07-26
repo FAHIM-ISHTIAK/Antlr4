@@ -139,19 +139,19 @@ vector<string> optimizeCode(vector<string>& lines) {
     for (size_t i = 0; i < lines.size(); i++) {
         string line = lines[i];
         if (trim(line).empty()) {
-            continue; // skip empty lines
+            continue;
         }
 
         // Check for redundant MOV
         if (i + 1 < lines.size() && isRedundantMOV(line, lines[i+1])) {
-            i++; // skip the next line
-            optimized.push_back(line); // keep the current line
+            i++;
+            optimized.push_back(line);
             continue;
         }
 
         // Check for redundant PUSH/POP
         if (i + 1 < lines.size() && isRedundantPUSHPOP(line, lines[i+1])) {
-            i++; // skip both lines
+            i++;
             continue;
         }
 
@@ -196,8 +196,8 @@ vector<string> optimizeCode(vector<string>& lines) {
 }
 
 int main() {
-    ifstream fin("output/assemblyOutput.asm");
-    ofstream fout("output/optimizedCode.asm");
+    ifstream fin("output/code.asm");
+    ofstream fout("output/optimized_code.asm");
     
     if (!fin) {
         cerr << "Error: output/assemblyCode.asm not found.\n";
